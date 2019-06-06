@@ -28,7 +28,7 @@ void setup() {
 //void loop() {
 //  for(int i=0; i<PIXELS; i++) {
 //    int pixel = i;//random(0, PIXELS);
-//    setPixel(pixel, current_color);
+//    setColor(pixel, current_color);
 //    strip.show();
 //    delay(300);
 //  }
@@ -39,11 +39,11 @@ void loop() {
   pixel = random(0, PIXELS);
   r = random(0, 4);
   if (r == 0) {
-    setPixel(pixel, color_1);
+    setColor(pixel, color_1);
   } else if (r == 1) {
-    setPixel(pixel, color_2);  
+    setColor(pixel, color_2);  
   } else if (r == 2) {
-    setPixel(pixel, off_color);
+    setColor(pixel, off_color);
   } else {
     
   }
@@ -51,7 +51,7 @@ void loop() {
   delay(random(10, 100));
 }
 
-void setPixel(int pixel, uint32_t color) {
+void setColor(int pixel, uint32_t color) {
   led = (pixel * 4) - (floor(pixel / PIXELS_PER_ROW) * 3);
   strip.setPixelColor(led, color);
 }
