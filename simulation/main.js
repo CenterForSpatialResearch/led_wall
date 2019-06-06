@@ -1,33 +1,45 @@
-let grid_size = 15;
-let cell_size;
+const PIXELS_PER_ROW = 15
+const ROWS = 15
+const PIXELS = PIXELS_PER_ROW * ROWS
 
+let color_1 = 'red'
+let color_2 = 'blue'
+let off_color = 'white'
+
+let cell_size
+let pixel
+let r
 
 function setup() {
     let canvas = createCanvas(600, 600) 
     canvas.parent('p5') 
-    cell_size = width / grid_size;
-    console.log("grid_size", grid_size)
-    console.log("cell_size", cell_size)
+    cell_size = width / PIXELS_PER_ROW
     stroke(0)
     rect(0, 0, width, height)    
 }
 
 function draw() {
-    // background(255)
-    let types = ['red', 'blue'];
-    let n = floor(random() * grid_size * grid_size)
-    let i = floor(random() * 2)
-    lightCell(n, types[i])
+    pixel = int(random(0, PIXELS))
+    r = int(random(4))
+    if (r == 0) {
+        setPixel(pixel, color_1)
+    } else if (r == 1) {
+        setPixel(pixel, color_2)
+    } else if (r == 2) {
+        setPixel(pixel, off_color)
+    } else {
+
+    }
 }
 
 function neighborScore(n, color) {
 
 }
 
-function lightCell(n, color) {
-    let y = floor(n / grid_size)
-    let x = n % grid_size    
-    noStroke()
+function setPixel(n, color) {
+    let y = floor(n / ROWS)
+    let x = n % PIXELS_PER_ROW    
+    stroke(255)
     fill(color)    
     circle((x * cell_size) + (cell_size / 2), (y * cell_size) + (cell_size / 2), cell_size - 4)
 }
