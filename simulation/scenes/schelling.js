@@ -1,20 +1,37 @@
 'use strict'
 
-const TOLERANCE = .3
-const MAX_STEPS = 800   // equilibrium not guaranteed
+/* arduino style: minimize garbage collection and specialty functions */
 
+const TOLERANCE = .3
+const MAX_STEPS = 2000   // equilibrium not guaranteed
+const COUNTDOWN = 50
+const PERCENT_POP = 2/3
+
+// declare variables
+let index
+let spot_index
+let pixel
+let spot
+let countdown       // delay after finishing
+let steps
+let same
+let total
+let moved
+
+// allocate arrays
 let neighbors = new Array(8)
 let sequence = new Array(PIXELS)
 
-let countdown       // delay after finishing
-let steps
 
 function start() {    
-    countdown = 50
+    index = 0
+    spot_index = 0
     steps = 0
+    countdown = COUNTDOWN
     background(off_color)    
+    resetColors()
     for (let pixel=0; pixel<PIXELS; pixel++) {
-        if (random() < .5) {
+        if (random() < PERCENT_POP) {
             if (random() > .5) {
                 setColor(pixel, color_1)
             } else {
@@ -29,33 +46,28 @@ function start() {
 }
 
 function main() {
-    for (let i=0; i<PIXELS; i++) {
-        let pixel = sequence[i]
-        if (!calcHappiness(pixel)) {
-            let p = 0
-            let b = 0
-            let r = random(PIXELS / 2)
-            while (b < r) {
-                if (getColor(p) == off_color) {
-                    b++
-                }
-                p = (p + 1) % PIXELS
-            }
-            moveAgent(pixel, p - 1)
-            steps++
-            if (steps == MAX_STEPS) {
-                start()
-                console.log('reset')            
-                // some sort of bug -- if it hits this and resets, it's no longer going through the full sequence
-                // and then eventually it freezes, not even checking any
-                // something is not being reset
-            }
-           return
+    let i = 0
+    do {                    // each frame, find the next unhappy agent
+        pixel = sequence[index++]
+        index %= PIXELS
+        i++
+        steps++
+    } while (i < PIXELS && calcHappiness(pixel) && steps < MAX_STEPS)
+    if (i == PIXELS || steps >= MAX_STEPS) {            // either everybody is happy, or we've exceeded the max steps, so let's wrap it up
+        countdown--
+        if (countdown == 0) {
+            start()
         }
-    }
-    countdown--
-    if (countdown == 0) {
-        start()
+    } else {        // if the agent is unhappy, pick a random open square to move it to
+        moved = false
+        while (true) {
+            spot = sequence[spot_index++]
+            spot_index %= PIXELS
+            if (getColor(spot) == off_color) {
+                moveAgent(pixel, spot)
+                break
+            }
+        }
     }
 }
 
@@ -63,8 +75,8 @@ function calcHappiness(pixel) {
     if (getColor(pixel) == off_color) {
         return true
     }
-    let same = 0.0
-    let total = 8.0
+    same = 0.0
+    total = 8.0
     neighbors = [   pixel - 1, pixel + 1, 
                     pixel + PIXELS_PER_ROW - 1, pixel + PIXELS_PER_ROW, pixel + PIXELS_PER_ROW + 1,
                     pixel - PIXELS_PER_ROW - 1, pixel - PIXELS_PER_ROW, pixel - PIXELS_PER_ROW + 1
@@ -90,9 +102,9 @@ function calcHappiness(pixel) {
     }
 }
 
-function moveAgent(n1, n2) {
-    setColor(n2, getColor(n1))
-    setColor(n1, off_color)
+function moveAgent(current_space, new_space) {
+    setColor(new_space, getColor(current_space))
+    setColor(current_space, off_color)
 }
 
 function shuffleSequence(a) {
