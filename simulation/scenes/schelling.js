@@ -1,14 +1,17 @@
 'use strict'
 
 const TOLERANCE = .3
+const MAX_STEPS = 800   // equilibrium not guaranteed
 
 let neighbors = new Array(8)
 let sequence = new Array(PIXELS)
 
-let countdown
+let countdown       // delay after finishing
+let steps
 
 function start() {    
     countdown = 50
+    steps = 0
     background(off_color)    
     for (let pixel=0; pixel<PIXELS; pixel++) {
         if (random() < .5) {
@@ -39,7 +42,15 @@ function main() {
                 p = (p + 1) % PIXELS
             }
             moveAgent(pixel, p - 1)
-            return
+            steps++
+            if (steps == MAX_STEPS) {
+                start()
+                console.log('reset')            
+                // some sort of bug -- if it hits this and resets, it's no longer going through the full sequence
+                // and then eventually it freezes, not even checking any
+                // something is not being reset
+            }
+           return
         }
     }
     countdown--
@@ -95,6 +106,4 @@ function shuffleSequence(a) {
     }
 }
 
-
-// note: equilibrium not guaranteed
 
