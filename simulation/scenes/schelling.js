@@ -59,8 +59,7 @@ function main() {
     else if (state == PLAY) {
         checked = 0
         while (true) {
-            // if (checked == PIXELS) {
-            if (PIXELS - checked < 4) { // this doesnt work
+            if (checked == PIXELS) {
                 console.log("checked out", checked)
                 state = SHUTDOWN
                 return
@@ -151,10 +150,8 @@ function calcHappiness(p) {
     }
     same = 0
     for (let n=0; n<neighbors.length; n++) {
-        if (neighbors[n] >= 0 && neighbors[n] < PIXELS) {
-            if (getColor(neighbors[n]) == getColor(p)) {            
-                same++
-            }
+        if (getColor(neighbors[n]) == getColor(p)) {            
+            same++
         }
     }    
     return same < HOMOPHILY ? false : true
