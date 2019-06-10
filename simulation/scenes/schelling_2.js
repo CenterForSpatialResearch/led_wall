@@ -4,7 +4,7 @@
 
 const TYPES = 2
 const HOMOPHILY = 6
-const MAX_STEPS = 1000
+const MAX_STEPS = 2000
 const COUNTDOWN = 100
 const POPULATION = Math.floor(PIXELS / TYPES)
 
@@ -76,10 +76,8 @@ function main() {
             let happiness = calcHappiness(pixel, neighbors)
             let happiest_neighbor = null
             let max_happiness = 0
-            // let r = int(random(neighbors.length))
-            let r = 0
             for (let j=neighbors.length - 1; j>=0; j--) {
-                let n = (j + r) % neighbors.length;
+                let n = (j + steps) % neighbors.length;
                 if (neighbors[n] == null) {
                     continue
                 }
@@ -94,6 +92,9 @@ function main() {
             if (happiest_neighbor != null && max_happiness >= happiness) {
                 moveAgent(pixel, happiest_neighbor)
                 steps++           
+                if (steps % 100 == 0) {
+                    console.log(steps)
+                }
                 updateTransitions()
                 return
             }
