@@ -2,11 +2,11 @@
 
 /* arduino style: minimize garbage collection and specialty functions */
 
-const TOLERANCE = .3
+const HOMOPHILY = 3
 const MAX_STEPS = 2000   // equilibrium not guaranteed
 const COUNTDOWN = 100
-const TYPES = 5
-const PERCENT_POP = 1/TYPES
+const TYPES = 2
+const POPULATION = Math.floor(PIXELS / TYPES)
 
 // declare variables
 let index
@@ -16,39 +16,32 @@ let spot
 let countdown       // delay after finishing
 let steps
 let same
-let total
-let moved
+let i
 
 // allocate arrays
 let neighbors = new Array(8)
 let sequence = new Array(PIXELS)
 
 
-function start() {    
+function start() {
     index = 0
     spot_index = 0
     steps = 0
     countdown = COUNTDOWN
     background(off_color)    
     resetColors()
-    for (let pixel=0; pixel<PIXELS; pixel++) {
-        if (random() < PERCENT_POP) {
-            let r = random()
-            for (let t=1; t<TYPES + 1; t++) {
-                if (r >= (t-1)/TYPES && r < t/TYPES) {
-                    setColor(pixel, colors[t - 1])
-                }
-            }
-        }
-    }
     for (let s=0; s<sequence.length; s++) {
         sequence[s] = s
     }
     shuffleSequence(sequence)    
+    for (let agent=0; agent<POPULATION; agent++) {
+        pixel = sequence[agent]
+        setColor(pixel, colors[agent % TYPES])
+    }
 }
 
 function main() {
-    let i = 0
+    i = 0
     do {                    // each frame, find the next unhappy agent
         pixel = sequence[index++]
         index %= PIXELS
@@ -61,7 +54,6 @@ function main() {
             start()
         }
     } else {        // if the agent is unhappy, pick a random open square to move it to
-        moved = false
         while (true) {
             spot = sequence[spot_index++]
             spot_index %= PIXELS
@@ -73,35 +65,23 @@ function main() {
     }
 }
 
-function calcHappiness(pixel) {
-    if (getColor(pixel) == off_color) {
+function calcHappiness(p) {
+    if (getColor(p) == off_color) {
         return true
     }
     same = 0.0
-    total = 8.0
-    neighbors = [   pixel - 1, pixel + 1, 
-                    pixel + PIXELS_PER_ROW - 1, pixel + PIXELS_PER_ROW, pixel + PIXELS_PER_ROW + 1,
-                    pixel - PIXELS_PER_ROW - 1, pixel - PIXELS_PER_ROW, pixel - PIXELS_PER_ROW + 1
+    neighbors = [   p - 1, p + 1, 
+                    p + PIXELS_PER_ROW - 1, p + PIXELS_PER_ROW, p + PIXELS_PER_ROW + 1,
+                    p - PIXELS_PER_ROW - 1, p - PIXELS_PER_ROW, p - PIXELS_PER_ROW + 1
                     ]
-    for (let n=0; n<8; n++) {
-        if (neighbors[n] < 0 || neighbors[n] > PIXELS - 1) {
-            total--
-            continue
-        }
-        if (getColor(neighbors[n]) == off_color) {
-            total--
-            continue
-        }
-        total++
-        if (getColor(neighbors[n]) == getColor(pixel)) {            
-            same++
+    for (let n=0; n<neighbors.length; n++) {
+        if (neighbors[n] > 0 && neighbors[n] < PIXELS) {
+            if (getColor(neighbors[n]) == getColor(p)) {            
+                same++
+            }
         }
     }    
-    if (total < 3) {
-        return false
-    } else {
-        return (same / total > TOLERANCE)
-    }
+    return same < HOMOPHILY ? false : true
 }
 
 function moveAgent(current_space, new_space) {
@@ -119,5 +99,3 @@ function shuffleSequence(a) {
         a[r] = temp
     }
 }
-
-
