@@ -22,6 +22,7 @@ let index
 let same
 let steps
 let countdown       // delay after finishing
+let checked
 
 // allocate arrays
 let sequence = new Array(PIXELS)
