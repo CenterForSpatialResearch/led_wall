@@ -4,9 +4,11 @@
 
 const TYPES = 2
 const HOMOPHILY = 6
-const MAX_STEPS = 2000
+const MAX_STEPS = 2500
 const COUNTDOWN = 100
-const POPULATION = Math.floor(PIXELS / TYPES)
+// const POPULATION = Math.floor(PIXELS / TYPES)
+const POPULATION = 1
+const TRANSITION = 4
 
 const STARTUP = 0
 const PLAY = 1
@@ -41,7 +43,7 @@ function reset() {
     background(off_color)    
     resetColors()
     for (let t=0; t<sequence.length; t++) {
-        transitions[t] = false
+        transitions[t] = -1
     }    
     for (let s=0; s<sequence.length; s++) {
         sequence[s] = s
@@ -54,6 +56,7 @@ function main() {
     if (state == STARTUP) {
         pixel = sequence[index++]
         setColor(pixel, colors[index % TYPES])
+        updateTransitions()
         if (index == POPULATION) {
             state = PLAY        
             console.log("play")
@@ -75,9 +78,10 @@ function main() {
             neighbors = getNeighbors(pixel)
             let happiness = calcHappiness(pixel, neighbors)
             let happiest_neighbor = null
-            let max_happiness = 0
+            let max_happiness = 0            
             for (let j=neighbors.length - 1; j>=0; j--) {
-                let n = (j + steps) % neighbors.length;
+                // let n = (j + steps) % neighbors.length
+                let n = j
                 if (neighbors[n] == null) {
                     continue
                 }
@@ -92,7 +96,7 @@ function main() {
             if (happiest_neighbor != null && max_happiness >= happiness) {
                 moveAgent(pixel, happiest_neighbor)
                 steps++           
-                if (steps % 100 == 0) {
+                if (steps % 500 == 0) {
                     console.log(steps)
                 }
                 updateTransitions()
@@ -167,9 +171,9 @@ function calcHappiness(p, ns) {
     // return same < HOMOPHILY ? false : true
 }
 
-function moveAgent(current_space, new_space) {
-    setColor(new_space, getColor(current_space))
-    setColor(current_space, off_color)
+function moveAgent(current_pixel, new_pixel) {
+    setColor(new_pixel, getColor(current_pixel))
+    setColor(current_pixel, off_color)
 }
 
 function shuffleSequence(a) {
@@ -184,19 +188,46 @@ function shuffleSequence(a) {
 }
 
 function setColor(pixel, color) {
+    // if (previous_pixel_colors[pixel] != pixel_colors[pixel]) {
+        previous_pixel_colors[pixel] = pixel_colors[pixel]
+    // }
+    // if (pixel_colors[pixel] != color) {    
+        pixel_colors[pixel] = color
+        transitions[pixel] = TRANSITION
+    // }
+}
+
+function updateTransitions() {    
+    for (let pixel=0; pixel<PIXELS; pixel++) {
+        if (transitions[pixel] >= 0) {
+
+            let c1 = color(previous_pixel_colors[pixel])
+            let c2 = color(pixel_colors[pixel])
+            let pos = (TRANSITION - transitions[pixel]) / TRANSITION            
+            let c = lerpColor(c1, c2, pos)
+            if (c2.toString() == "rgba(0,0,255,1)") {           
+                // if blue is the target, it's not fading because pos is always 0 because transitions is always 4
+                // why? 
+                console.log("test:", c1.toString(), c2.toString(), c.toString(), pos, transitions[pixel])
+            }
+            paintColor(pixel, c)
+            transitions[pixel]--                        
+        }
+    }
+}
+
+function paintColor(pixel, color) {        
     let y = floor(pixel / ROWS)
     let x = pixel % PIXELS_PER_ROW    
     stroke(255)
     fill(color)    
     circle((x * cell_size) + (cell_size / 2), (y * cell_size) + (cell_size / 2), cell_size - 4)
-    pixel_colors[pixel] = color
 }
 
-function updateTransitions() {
-    for (let p=0; p<PIXELS; p++) {
-        if (transitions[p]) {
-            transitions[p]--
-        }
-    }
-}
+/*
+
+wtf
+this is determining the length of the tail
+which is great, but I want the head also
+*/
 

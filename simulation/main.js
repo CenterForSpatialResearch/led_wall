@@ -4,11 +4,12 @@ const PIXELS_PER_ROW = 15
 const ROWS = 15
 const PIXELS = PIXELS_PER_ROW * ROWS
 
-let colors = ['red', 'blue', 'orange', 'purple', 'green']
-let off_color = 'white'
+let colors = [[255, 0, 0], [0, 0, 255], 'orange', 'purple', 'green']
+let off_color = [255, 255, 255]
 
 let cell_size
 let pixel_colors = []
+let previous_pixel_colors = []
 
 function setup() {
     let canvas = createCanvas(400, 400)
@@ -19,7 +20,8 @@ function setup() {
     background(off_color) 
     resetColors()
     start()
-    frameRate(30)
+    // frameRate(30)
+    frameRate(5)
     textFont('monospace')
     strokeWeight(1)
 }
@@ -52,7 +54,9 @@ function setColor(pixel, color) {
 
 function resetColors() {
     pixel_colors = []
+    previous_pixel_colors = []
     for (let pixel=0; pixel<PIXELS; pixel++) {
         pixel_colors.push(off_color)
+        previous_pixel_colors.push(off_color)
     }
 }
