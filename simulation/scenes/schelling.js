@@ -2,21 +2,20 @@
 
 /* arduino style: minimize garbage collection and specialty functions */
 
+const TYPES = 2
 const HOMOPHILY = 3
 const MAX_STEPS = 100000   // equilibrium not guaranteed
 const COUNTDOWN = 100
-const TYPES = 2
 const POPULATION = Math.floor(PIXELS / TYPES)
 
 // declare variables
-let index
-let spot_index
 let pixel
-let spot
-let countdown       // delay after finishing
-let steps
+let index
+let checked
 let same
-let i
+let steps
+let countdown       // delay after finishing
+
 
 // allocate arrays
 let neighbors = new Array(8)
@@ -25,7 +24,6 @@ let sequence = new Array(PIXELS)
 
 function start() {
     index = 0
-    spot_index = 0
     steps = 0
     countdown = COUNTDOWN
     background(off_color)    
@@ -41,35 +39,38 @@ function start() {
 }
 
 function main() {
-    i = 0
-    do {                    // each frame, find the next unhappy agent
+    checked = 0
+    while (true) {                    // each frame, find the next unhappy agent
+        if (checked == PIXELS) {
+            console.log("checked all")
+            start()
+            return
+        }
+        if (steps == MAX_STEPS) {
+            console.log("hit max")
+            start()
+            return
+        }
         pixel = sequence[index++]
         index %= PIXELS
-        i++
-        steps++
+        checked++
         calcNeighbors(pixel)
-    } while (i < PIXELS && calcHappiness(pixel) && steps < MAX_STEPS)
-    if (i == PIXELS || steps >= MAX_STEPS) {            // either everybody is happy, or we've exceeded the max steps, so let's wrap it up
-        countdown--
-        if (countdown == 0) {
-            if (steps >= MAX_STEPS) {
-                console.log("hit max")
+        if (!calcHappiness(pixel)) {
+            let r = int(random(neighbors.length))
+            for (let j=0; j<neighbors.length; j++) {
+                let n = (j + r) % neighbors.length;
+                if (neighbors[n] == null) {
+                    continue
+                }
+                if (getColor(neighbors[n]) == off_color) {
+                    moveAgent(pixel, neighbors[n])
+                    break
+                }
             }
-            start()
+            steps++
+            return
         }
-    } else {        // if the agent is unhappy, pick a random open square nearby 
-        let r = int(random(neighbors.length))
-        for (let j=0; j<neighbors.length; j++) {
-            let n = (j + r) % neighbors.length;
-            if (neighbors[n] == null) {
-                continue
-            }
-            if (getColor(neighbors[n]) == off_color) {
-                moveAgent(pixel, neighbors[n])
-                break
-            }
-        }
-    }
+    } 
 }
 
 function calcNeighbors(p) {
@@ -77,7 +78,6 @@ function calcNeighbors(p) {
                     p + PIXELS_PER_ROW - 1, p + PIXELS_PER_ROW, p + PIXELS_PER_ROW + 1,
                     p - PIXELS_PER_ROW - 1, p - PIXELS_PER_ROW, p - PIXELS_PER_ROW + 1
                     ]    
-
     if (p < PIXELS_PER_ROW) {
         neighbors[5] = null
         neighbors[6] = null
@@ -104,7 +104,7 @@ function calcHappiness(p) {
     if (getColor(p) == off_color) {
         return true
     }
-    same = 0.0
+    same = 0
     for (let n=0; n<neighbors.length; n++) {
         if (neighbors[n] >= 0 && neighbors[n] < PIXELS) {
             if (getColor(neighbors[n]) == getColor(p)) {            
