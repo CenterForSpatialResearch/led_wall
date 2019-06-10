@@ -8,7 +8,14 @@ const MAX_STEPS = 100000   // equilibrium not guaranteed
 const COUNTDOWN = 100
 const POPULATION = Math.floor(PIXELS / TYPES)
 
+const STARTUP = 0
+const PLAY = 1
+const HOLD = 2
+const SHUTDOWN = 3
+
+
 // declare variables
+let state
 let pixel
 let index
 let checked
@@ -21,10 +28,15 @@ let countdown       // delay after finishing
 let neighbors = new Array(8)
 let sequence = new Array(PIXELS)
 
-
 function start() {
+    reset()
+}
+
+function reset() {
+    console.log("start")
+    state = STARTUP
     index = 0
-    steps = 0
+    steps = 0    
     countdown = COUNTDOWN
     background(off_color)    
     resetColors()
@@ -32,45 +44,78 @@ function start() {
         sequence[s] = s
     }
     shuffleSequence(sequence)    
-    for (let agent=0; agent<POPULATION; agent++) {
-        pixel = sequence[agent]
-        setColor(pixel, colors[agent % TYPES])
-    }
 }
 
 function main() {
-    checked = 0
-    while (true) {                    // each frame, find the next unhappy agent
-        if (checked == PIXELS) {
-            console.log("checked all")
-            start()
-            return
-        }
-        if (steps == MAX_STEPS) {
-            console.log("hit max")
-            start()
-            return
-        }
+
+    if (state == STARTUP) {
         pixel = sequence[index++]
-        index %= PIXELS
-        checked++
-        calcNeighbors(pixel)
-        if (!calcHappiness(pixel)) {
-            let r = int(random(neighbors.length))
-            for (let j=0; j<neighbors.length; j++) {
-                let n = (j + r) % neighbors.length;
-                if (neighbors[n] == null) {
-                    continue
-                }
-                if (getColor(neighbors[n]) == off_color) {
-                    moveAgent(pixel, neighbors[n])
-                    break
-                }
-            }
-            steps++
-            return
+        setColor(pixel, colors[index % TYPES])
+        if (index == POPULATION) {
+            state = PLAY        
         }
     } 
+
+    else if (state == PLAY) {
+        checked = 0
+        while (true) {
+            // if (checked == PIXELS) {
+            if (PIXELS - checked < 4) { // this doesnt work
+                console.log("checked out", checked)
+                state = SHUTDOWN
+                return
+            }
+            if (steps == MAX_STEPS) {
+                console.log("hit max")
+                state = SHUTDOWN
+                return
+            }
+            pixel = sequence[index++]
+            index %= PIXELS
+            checked++
+            calcNeighbors(pixel)
+            if (!calcHappiness(pixel)) {
+                let r = int(random(neighbors.length))
+                for (let j=0; j<neighbors.length; j++) {
+                    let n = (j + r) % neighbors.length;
+                    if (neighbors[n] == null) {
+                        continue
+                    }
+                    if (getColor(neighbors[n]) == off_color) {
+                        moveAgent(pixel, neighbors[n])
+                        break
+                    }
+                }
+                steps++
+                return
+            }
+        } 
+    }
+
+    else if (state == HOLD) {
+        countdown--
+        if (countdown == 0) {
+            state = SHUTDOWN
+        }
+    }
+
+    else if (state == SHUTDOWN) {
+        checked = 0
+        while (true) {
+            if (checked == PIXELS) {
+                reset()
+                return
+            }                    
+            pixel = sequence[index++]
+            index %= PIXELS
+            checked++
+            if (getColor(pixel) != off_color) {
+                setColor(pixel, off_color)
+                return
+            }
+        }
+    }
+
 }
 
 function calcNeighbors(p) {
