@@ -3,7 +3,7 @@
 /* arduino style: minimize garbage collection and specialty functions */
 
 const HOMOPHILY = 3
-const MAX_STEPS = 2000   // equilibrium not guaranteed
+const MAX_STEPS = 100000   // equilibrium not guaranteed
 const COUNTDOWN = 100
 const TYPES = 2
 const POPULATION = Math.floor(PIXELS / TYPES)
@@ -47,21 +47,56 @@ function main() {
         index %= PIXELS
         i++
         steps++
+        calcNeighbors(pixel)
     } while (i < PIXELS && calcHappiness(pixel) && steps < MAX_STEPS)
     if (i == PIXELS || steps >= MAX_STEPS) {            // either everybody is happy, or we've exceeded the max steps, so let's wrap it up
         countdown--
         if (countdown == 0) {
+            if (steps >= MAX_STEPS) {
+                console.log("hit max")
+            }
             start()
         }
-    } else {        // if the agent is unhappy, pick a random open square to move it to
-        while (true) {
-            spot = sequence[spot_index++]
-            spot_index %= PIXELS
-            if (getColor(spot) == off_color) {
-                moveAgent(pixel, spot)
+    } else {        // if the agent is unhappy, pick a random open square nearby 
+        let r = int(random(neighbors.length))
+        for (let j=0; j<neighbors.length; j++) {
+            let n = (j + r) % neighbors.length;
+            if (neighbors[n] == null) {
+                continue
+            }
+            if (getColor(neighbors[n]) == off_color) {
+                moveAgent(pixel, neighbors[n])
                 break
             }
         }
+    }
+}
+
+function calcNeighbors(p) {
+    neighbors = [   p - 1, p + 1, 
+                    p + PIXELS_PER_ROW - 1, p + PIXELS_PER_ROW, p + PIXELS_PER_ROW + 1,
+                    p - PIXELS_PER_ROW - 1, p - PIXELS_PER_ROW, p - PIXELS_PER_ROW + 1
+                    ]    
+
+    if (p < PIXELS_PER_ROW) {
+        neighbors[5] = null
+        neighbors[6] = null
+        neighbors[7] = null
+    }
+    if (p >= PIXELS - PIXELS_PER_ROW) {
+        neighbors[2] = null
+        neighbors[3] = null
+        neighbors[4] = null
+    }
+    if (p % PIXELS_PER_ROW == 0) {
+        neighbors[0] = null
+        neighbors[2] = null
+        neighbors[5] = null
+    }
+    if (p % PIXELS_PER_ROW == PIXELS_PER_ROW - 1) {
+        neighbors[1] = null
+        neighbors[4] = null
+        neighbors[7] = null
     }
 }
 
@@ -70,12 +105,8 @@ function calcHappiness(p) {
         return true
     }
     same = 0.0
-    neighbors = [   p - 1, p + 1, 
-                    p + PIXELS_PER_ROW - 1, p + PIXELS_PER_ROW, p + PIXELS_PER_ROW + 1,
-                    p - PIXELS_PER_ROW - 1, p - PIXELS_PER_ROW, p - PIXELS_PER_ROW + 1
-                    ]
     for (let n=0; n<neighbors.length; n++) {
-        if (neighbors[n] > 0 && neighbors[n] < PIXELS) {
+        if (neighbors[n] >= 0 && neighbors[n] < PIXELS) {
             if (getColor(neighbors[n]) == getColor(p)) {            
                 same++
             }
