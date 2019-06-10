@@ -4,8 +4,9 @@
 
 const TOLERANCE = .3
 const MAX_STEPS = 2000   // equilibrium not guaranteed
-const COUNTDOWN = 50
-const PERCENT_POP = 2/3
+const COUNTDOWN = 100
+const TYPES = 5
+const PERCENT_POP = 1/TYPES
 
 // declare variables
 let index
@@ -32,10 +33,11 @@ function start() {
     resetColors()
     for (let pixel=0; pixel<PIXELS; pixel++) {
         if (random() < PERCENT_POP) {
-            if (random() > .5) {
-                setColor(pixel, color_1)
-            } else {
-                setColor(pixel, color_2)
+            let r = random()
+            for (let t=1; t<TYPES + 1; t++) {
+                if (r >= (t-1)/TYPES && r < t/TYPES) {
+                    setColor(pixel, colors[t - 1])
+                }
             }
         }
     }
@@ -95,8 +97,8 @@ function calcHappiness(pixel) {
             same++
         }
     }    
-    if (total == 0) {
-        return true
+    if (total < 3) {
+        return false
     } else {
         return (same / total > TOLERANCE)
     }

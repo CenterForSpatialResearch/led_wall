@@ -4,8 +4,7 @@ const PIXELS_PER_ROW = 15
 const ROWS = 15
 const PIXELS = PIXELS_PER_ROW * ROWS
 
-let color_1 = 'red'
-let color_2 = 'blue'
+let colors = ['red', 'blue', 'orange', 'purple', 'green']
 let off_color = 'white'
 
 let cell_size
