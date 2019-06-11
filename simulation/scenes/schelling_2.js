@@ -6,7 +6,7 @@
 const PIXELS_PER_ROW = 15
 const ROWS = 15
 const TYPES = 2
-const MAX_STEPS = 100
+const MAX_STEPS = 2500
 const COUNTDOWN = 100
 const COLORS = [[255, 0, 0], [0, 0, 255], [255, 255, 0], [0, 255, 255], [0, 0, 255]]
 const OFF_COLOR = [255, 255, 255]
@@ -79,7 +79,7 @@ function draw() {
         setColor(pixel, COLORS[index % TYPES])
         updateTransitions()
         if (index == POPULATION) {
-            state = SHUTDOWN        
+            state = PLAY        
             console.log("play")
         }
     } 
@@ -102,8 +102,7 @@ function draw() {
             let max_happiness = 0            
             for (let j=neighbors.length - 1; j>=0; j--) {
                 let offset = int(random(neighbors.length))
-                // let n = (j + offset) % neighbors.length
-                let n = j
+                let n = (j + offset) % neighbors.length
                 if (neighbors[n] == null) {
                     continue
                 }
@@ -252,5 +251,3 @@ function paintColor(pixel, color) {
     circle((x * CELL_SIZE) + (CELL_SIZE / 2), (y * CELL_SIZE) + (CELL_SIZE / 2), CELL_SIZE - 4)
 }
 
-
-// they definitely move into spaces with lower happiness

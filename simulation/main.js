@@ -1,11 +1,11 @@
 'use strict'
 
-const PIXELS_PER_ROW = 15
-const ROWS = 15
-const PIXELS = PIXELS_PER_ROW * ROWS
+// const PIXELS_PER_ROW = 15
+// const ROWS = 15
+// const PIXELS = PIXELS_PER_ROW * ROWS
 
-let colors = [[255, 0, 0], [0, 0, 255], 'orange', 'purple', 'green']
-let off_color = [255, 255, 255]
+// let colors = [[255, 0, 0], [0, 0, 255], 'orange', 'purple', 'green']
+// let off_color = [255, 255, 255]
 
 let cell_size
 let pixel_colors = []
