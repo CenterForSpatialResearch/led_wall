@@ -8,12 +8,12 @@ const ROWS = 15
 const TYPES = 2
 const MAX_STEPS = 2500
 const COUNTDOWN = 100
-const COLORS = [[255, 0, 0], [0, 0, 255], [255, 255, 0], [0, 255, 255], [0, 0, 255]]
+const COLORS = [[255, 0, 0], [0, 0, 255], [100, 255, 0], [0, 255, 255], [0, 0, 255]]
 const OFF_COLOR = [255, 255, 255]
 
 // dependent constants
 const PIXELS = PIXELS_PER_ROW * ROWS
-const POPULATION = Math.floor(PIXELS / TYPES)
+const POPULATION = Math.floor(PIXELS / 2)
 
 // states
 const STARTUP = 0
@@ -47,8 +47,7 @@ function setup() {
     rect(0, 0, width, height) 
     background(OFF_COLOR) 
     resetColors()
-    // frameRate(10)
-    frameRate(30)
+    frameRate(10)
     textFont('monospace')
     strokeWeight(1)
     reset()
