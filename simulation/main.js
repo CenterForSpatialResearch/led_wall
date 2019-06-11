@@ -20,14 +20,12 @@ function setup() {
     background(off_color) 
     resetColors()
     start()
-    // frameRate(30)
-    frameRate(5)
+    frameRate(30)
     textFont('monospace')
     strokeWeight(1)
 }
 
 function draw() {
-    // console.log(loop)
     main()
     let fr = int(frameRate())
     fill(200)

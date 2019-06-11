@@ -6,9 +6,7 @@ const TYPES = 2
 const HOMOPHILY = 6
 const MAX_STEPS = 2500
 const COUNTDOWN = 100
-// const POPULATION = Math.floor(PIXELS / TYPES)
-const POPULATION = 1
-const TRANSITION = 4
+const POPULATION = Math.floor(PIXELS / TYPES)
 
 const STARTUP = 0
 const PLAY = 1
@@ -188,28 +186,18 @@ function shuffleSequence(a) {
 }
 
 function setColor(pixel, color) {
-    // if (previous_pixel_colors[pixel] != pixel_colors[pixel]) {
-        previous_pixel_colors[pixel] = pixel_colors[pixel]
-    // }
-    // if (pixel_colors[pixel] != color) {    
-        pixel_colors[pixel] = color
-        transitions[pixel] = TRANSITION
-    // }
+    previous_pixel_colors[pixel] = pixel_colors[pixel]
+    pixel_colors[pixel] = color
+    transitions[pixel] = 2
 }
 
 function updateTransitions() {    
     for (let pixel=0; pixel<PIXELS; pixel++) {
         if (transitions[pixel] >= 0) {
-
             let c1 = color(previous_pixel_colors[pixel])
             let c2 = color(pixel_colors[pixel])
-            let pos = (TRANSITION - transitions[pixel]) / TRANSITION            
+            let pos = (3 - transitions[pixel]) / 3
             let c = lerpColor(c1, c2, pos)
-            if (c2.toString() == "rgba(0,0,255,1)") {           
-                // if blue is the target, it's not fading because pos is always 0 because transitions is always 4
-                // why? 
-                console.log("test:", c1.toString(), c2.toString(), c.toString(), pos, transitions[pixel])
-            }
             paintColor(pixel, c)
             transitions[pixel]--                        
         }
@@ -223,11 +211,3 @@ function paintColor(pixel, color) {
     fill(color)    
     circle((x * cell_size) + (cell_size / 2), (y * cell_size) + (cell_size / 2), cell_size - 4)
 }
-
-/*
-
-wtf
-this is determining the length of the tail
-which is great, but I want the head also
-*/
-
