@@ -17,9 +17,10 @@ const POPULATION = Math.floor(PIXELS / 2)
 
 // states
 const STARTUP = 0
-const PLAY = 1
-const HOLD = 2
-const SHUTDOWN = 3
+const INTRO = 1
+const PLAY = 2
+const HOLD = 3
+const CODA = 4
 
 // dependent constants
 let CELL_SIZE
@@ -51,12 +52,13 @@ function setup() {
     textFont('monospace')
     strokeWeight(1)
     reset()
+    state = STARTUP
 }
 
 // reset process
 function reset() {
     console.log("start")
-    state = STARTUP
+    state = INTRO
     index = 0
     steps = 0    
     countdown = COUNTDOWN
@@ -74,6 +76,16 @@ function reset() {
 function draw() {
 
     if (state == STARTUP) {
+        let pixel = index++;
+        setColor(pixel, COLORS[pixel % 2]);
+        updateTransitions();        
+        if (index == PIXELS) {
+            reset()
+            return
+        }
+    }  
+
+    else if (state == INTRO) {
         let pixel = sequence[index++]
         setColor(pixel, COLORS[index % TYPES])
         updateTransitions()
@@ -87,7 +99,7 @@ function draw() {
         while (true) {
             if (steps == MAX_STEPS) {
                 console.log("hit max")
-                state = SHUTDOWN
+                state = CODA
                 return
             }
             let pixel = sequence[index++]
@@ -129,11 +141,11 @@ function draw() {
     else if (state == HOLD) {
         countdown--
         if (countdown == 0) {
-            state = SHUTDOWN
+            state = CODA
         }
     }
 
-    else if (state == SHUTDOWN) {
+    else if (state == CODA) {
         let checked = 0
         while (true) {
             if (checked == PIXELS) {

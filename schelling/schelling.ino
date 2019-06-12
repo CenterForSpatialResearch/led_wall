@@ -2,8 +2,8 @@
 
 // settable params
 const uint8_t DATA_PIN = 6;
-const uint8_t PIXELS_PER_ROW = 15;
-const uint8_t ROWS = 15;
+const uint8_t PIXELS_PER_ROW = 5;//15;
+const uint8_t ROWS = 5;//15;
 const uint8_t TYPES = 2;
 const int MAX_STEPS = 2500;
 const uint8_t COUNTDOWN = 100;
@@ -23,9 +23,10 @@ const uint32_t OFF_COLOR = strip.Color(0, 0, 0);
 
 // states
 const uint8_t STARTUP = 0;
-const uint8_t PLAY = 1;
-const uint8_t HOLD = 2;
-const uint8_t SHUTDOWN = 3;
+const uint8_t INTRO = 1;
+const uint8_t PLAY = 2;
+const uint8_t HOLD = 3;
+const uint8_t CODA = 4;
 
 // declare persistant variables
 uint8_t state;
@@ -48,11 +49,12 @@ void setup() {
     strip.setBrightness(255);
     initNeighbors();
     reset();
+    state = STARTUP;
 }
 
 // reset process
 void reset() {
-    state = STARTUP;
+    state = INTRO;
     index = 0;
     steps = 0;   
     countdown = COUNTDOWN;
@@ -69,6 +71,16 @@ void reset() {
 void loop() {
 
     if (state == STARTUP) {
+        uint8_t pixel = index++;
+        setColor(pixel, COLORS[pixel % 2]);
+        updateTransitions();        
+        if (index == PIXELS) {
+            reset();
+            return;
+        }
+    }  
+
+    else if (state == INTRO) {
         uint8_t pixel = sequence[index++];
         setColor(pixel, COLORS[index % TYPES]);
         updateTransitions();
@@ -82,7 +94,7 @@ void loop() {
         while (true) {
             if (steps == MAX_STEPS) {
                 // console.log("hit max");
-                state = SHUTDOWN;
+                state = CODA;
                 return;
             }
             uint8_t pixel = sequence[index++];
@@ -120,11 +132,11 @@ void loop() {
     else if (state == HOLD) {
         countdown--;
         if (countdown == 0) {
-            state = SHUTDOWN;
+            state = CODA;
         }
     }
 
-    else if (state == SHUTDOWN) {
+    else if (state == CODA) {
         uint8_t checked = 0;
         while (true) {
             if (checked == PIXELS) {
@@ -141,6 +153,8 @@ void loop() {
             }
         }
     }
+
+    delay(300);
 
 }
 
@@ -243,4 +257,5 @@ uint32_t lerpColor(uint32_t c1, uint32_t c2, float pos) {
 void paintColor(uint8_t pixel, uint32_t color) {    
     int led = (pixel * 4) - (floor(pixel / PIXELS_PER_ROW) * 3);  
     strip.setPixelColor(led, color);  
+    strip.show();
 }
