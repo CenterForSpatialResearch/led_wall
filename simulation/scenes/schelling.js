@@ -153,7 +153,7 @@ function draw() {
 
 }
 
-function initNeighbors(p) {
+function initNeighbors() {
     NEIGHBORS = new Array(PIXELS)
     for (let pixel=0; pixel<PIXELS; pixel++) {
         let neighbors = [   pixel - 1, pixel + 1, 
@@ -210,8 +210,8 @@ function shuffleSequence(a) {
     }
 }
 
-function getColor(n) {
-    return pixel_colors[n]
+function getColor(pixel) {
+    return pixel_colors[pixel]
 }
 
 function resetColors() {
