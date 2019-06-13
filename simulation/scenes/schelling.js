@@ -78,7 +78,6 @@ function draw() {
     if (state == STARTUP) {
         let pixel = index++;
         setColor(pixel, COLORS[pixel % 2]);
-        updateTransitions();        
         if (index == PIXELS) {
             reset()
             return
@@ -88,7 +87,6 @@ function draw() {
     else if (state == INTRO) {
         let pixel = sequence[index++]
         setColor(pixel, COLORS[index % TYPES])
-        updateTransitions()
         if (index == POPULATION) {
             state = PLAY        
             console.log("play")
@@ -99,7 +97,7 @@ function draw() {
         while (true) {
             if (steps == MAX_STEPS) {
                 console.log("hit max")
-                state = CODA
+                state = HOLD
                 return
             }
             let pixel = sequence[index++]
@@ -131,8 +129,7 @@ function draw() {
                 if (steps % 500 == 0) {
                     console.log(steps)
                 }
-                updateTransitions()
-                return
+                break
             }
             
         } 
@@ -157,11 +154,12 @@ function draw() {
             checked++
             if (getColor(pixel) != OFF_COLOR) {
                 setColor(pixel, OFF_COLOR)
-                updateTransitions()
-                return
+                break
             }
         }
     }
+
+    updateTransitions()
 
 }
 

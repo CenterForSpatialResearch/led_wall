@@ -12,6 +12,7 @@ const uint8_t COUNTDOWN = 100;
 const uint8_t PIXELS = PIXELS_PER_ROW * ROWS;
 const int LEDS_PER_ROW = (((PIXELS_PER_ROW - 1) * 4) + 1) * ROWS;
 const uint8_t POPULATION = floor(PIXELS / 2);
+const uint8_t NONE = 255; // max value for uint8_t, restricts this to the 15x15 grid
 
 Adafruit_NeoPixel strip(LEDS_PER_ROW * ROWS, DATA_PIN, NEO_GRB + NEO_KHZ800);
 
@@ -43,24 +44,26 @@ uint8_t transitions[PIXELS];
 
 // p5 specific initialization
 void setup() {
+    Serial.begin(19200);
+    Serial.println("setup()");
     randomSeed(analogRead(0));
     strip.begin();
-    strip.show();
     strip.setBrightness(255);
     initNeighbors();
     reset();
     state = STARTUP;
+    Serial.println("STARTUP");
 }
 
 // reset process
 void reset() {
-    state = INTRO;
+    Serial.println("reset()");
     index = 0;
     steps = 0;   
     countdown = COUNTDOWN;
     resetColors();
     for (uint8_t t=0; t<PIXELS; t++) {
-        transitions[t] = -1;
+        transitions[t] = NONE;
     }    
     for (uint8_t s=0; s<PIXELS; s++) {
         sequence[s] = s;
@@ -73,20 +76,21 @@ void loop() {
     if (state == STARTUP) {
         uint8_t pixel = index++;
         setColor(pixel, COLORS[pixel % 2]);
-        updateTransitions();        
         if (index == PIXELS) {
             reset();
-            return;
+            state = INTRO;
+            Serial.println("INTRO");      
+            return;      
         }
     }  
 
     else if (state == INTRO) {
         uint8_t pixel = sequence[index++];
         setColor(pixel, COLORS[index % TYPES]);
-        updateTransitions();
         if (index == POPULATION) {
             state = PLAY;    
-            // console.log("play")
+            Serial.println("PLAY");
+            return;
         }
     } 
 
@@ -94,7 +98,8 @@ void loop() {
         while (true) {
             if (steps == MAX_STEPS) {
                 // console.log("hit max");
-                state = CODA;
+                state = HOLD;
+                Serial.println("HOLD");
                 return;
             }
             uint8_t pixel = sequence[index++];
@@ -102,13 +107,19 @@ void loop() {
             if (getColor(pixel) == OFF_COLOR) {
                 continue;
             }
+            Serial.print("pixel w agent "); 
+            Serial.println(pixel);
             uint8_t happiness = calcHappiness(pixel, NEIGHBORS[pixel]);
-            uint8_t happiest_neighbor = -1;
+            Serial.print("happiness ");             
+            Serial.println(happiness);
+            uint8_t happiest_neighbor = NONE;
             uint8_t max_happiness = 0;
-            for (uint8_t j=7; j>=0; j--) {
+            for (uint8_t j=0; j<8; j++) {
+                Serial.print("j");
+                Serial.println(j);
                 uint8_t offset = random(0, 8);
                 uint8_t n = (j + offset) % 8;
-                if (NEIGHBORS[pixel][n] == -1) {
+                if (NEIGHBORS[pixel][n] == NONE) {
                     continue;
                 }
                 if (getColor(NEIGHBORS[pixel][n]) == OFF_COLOR) {
@@ -119,11 +130,12 @@ void loop() {
                     }
                 }
             }
-            if (happiest_neighbor >=0 && max_happiness >= happiness) {
+            Serial.print("happiest_neighbor ");
+            Serial.println(happiest_neighbor);
+            if (happiest_neighbor != NONE && max_happiness >= happiness) {
                 moveAgent(pixel, happiest_neighbor);
                 steps++;
-                updateTransitions();
-                return;
+                break;
             }
             
         } 
@@ -133,6 +145,8 @@ void loop() {
         countdown--;
         if (countdown == 0) {
             state = CODA;
+            Serial.println("CODA");            
+            return;
         }
     }
 
@@ -140,7 +154,9 @@ void loop() {
         uint8_t checked = 0;
         while (true) {
             if (checked == PIXELS) {
-                reset();
+                reset();              
+                state = INTRO;
+                Serial.println("INTRO");
                 return;
             }                    
             uint8_t pixel = sequence[index++];
@@ -148,17 +164,19 @@ void loop() {
             checked++;
             if (getColor(pixel) != OFF_COLOR) {
                 setColor(pixel, OFF_COLOR);
-                updateTransitions();
-                return;
+                break;
             }
         }
     }
 
-    delay(300);
+    updateTransitions();
+    strip.show();
+//    delay(10);
 
 }
 
 void initNeighbors() {
+    Serial.println("initNeighbors()");
     for (uint8_t pixel=0; pixel<PIXELS; pixel++) {
         NEIGHBORS[0][0] = pixel - 1;
         NEIGHBORS[0][1] = pixel + 1;
@@ -169,24 +187,24 @@ void initNeighbors() {
         NEIGHBORS[0][6] = pixel - PIXELS_PER_ROW;
         NEIGHBORS[0][7] = pixel - PIXELS_PER_ROW + 1;
         if (pixel < PIXELS_PER_ROW) {
-            NEIGHBORS[0][5] = -1;
-            NEIGHBORS[0][6] = -1;
-            NEIGHBORS[0][7] = -1;
+            NEIGHBORS[0][5] = NONE;
+            NEIGHBORS[0][6] = NONE;
+            NEIGHBORS[0][7] = NONE;
         }
         if (pixel >= PIXELS - PIXELS_PER_ROW) {
-            NEIGHBORS[0][2] = -1;
-            NEIGHBORS[0][3] = -1;
-            NEIGHBORS[0][4] = -1;
+            NEIGHBORS[0][2] = NONE;
+            NEIGHBORS[0][3] = NONE;
+            NEIGHBORS[0][4] = NONE;
         }
         if (pixel % PIXELS_PER_ROW == 0) {
-            NEIGHBORS[0][0] = -1;
-            NEIGHBORS[0][2] = -1;
-            NEIGHBORS[0][5] = -1;
+            NEIGHBORS[0][0] = NONE;
+            NEIGHBORS[0][2] = NONE;
+            NEIGHBORS[0][5] = NONE;
         }
         if (pixel % PIXELS_PER_ROW == PIXELS_PER_ROW - 1) {
-            NEIGHBORS[0][1] = -1;
-            NEIGHBORS[0][4] = -1;
-            NEIGHBORS[0][7] = -1;
+            NEIGHBORS[0][1] = NONE;
+            NEIGHBORS[0][4] = NONE;
+            NEIGHBORS[0][7] = NONE;
         }
     }
 }
@@ -238,13 +256,13 @@ void setColor(uint8_t pixel, uint32_t color) {
 
 void updateTransitions() {    
     for (uint8_t pixel=0; pixel<PIXELS; pixel++) {
-        if (transitions[pixel] >= 0) {
+        if (transitions[pixel] != NONE) {
             uint32_t c1 = previous_pixel_colors[pixel];
             uint32_t c2 = pixel_colors[pixel];
             float pos = (3 - transitions[pixel]) / 3;            
             uint32_t c = lerpColor(c1, c2, pos);           
             paintColor(pixel, c);
-            transitions[pixel]--;                       
+            transitions[pixel]--;          // -1 will wrap to 255 which is NONE             
         }
     }
 }
@@ -257,5 +275,4 @@ uint32_t lerpColor(uint32_t c1, uint32_t c2, float pos) {
 void paintColor(uint8_t pixel, uint32_t color) {    
     int led = (pixel * 4) - (floor(pixel / PIXELS_PER_ROW) * 3);  
     strip.setPixelColor(led, color);  
-    strip.show();
 }
