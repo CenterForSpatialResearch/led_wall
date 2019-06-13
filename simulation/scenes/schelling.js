@@ -109,8 +109,8 @@ function draw() {
             let happiness = calcHappiness(pixel, neighbors)
             let happiest_neighbor = null
             let max_happiness = 0            
+            let offset = int(random(neighbors.length))
             for (let j=neighbors.length - 1; j>=0; j--) {
-                let offset = int(random(neighbors.length))
                 let n = (j + offset) % neighbors.length
                 if (neighbors[n] == null) {
                     continue

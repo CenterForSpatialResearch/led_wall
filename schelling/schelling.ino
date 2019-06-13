@@ -5,6 +5,7 @@ const uint8_t DATA_PIN = 6;
 const uint8_t PIXELS_PER_ROW = 5;//15;
 const uint8_t ROWS = 5;//15;
 const uint8_t TYPES = 2;
+const int DELAY = 100;
 const int MAX_STEPS = 2500;
 const uint8_t COUNTDOWN = 100;
 
@@ -28,6 +29,7 @@ const uint8_t INTRO = 1;
 const uint8_t PLAY = 2;
 const uint8_t HOLD = 3;
 const uint8_t CODA = 4;
+const uint8_t STOP = 5;
 
 // declare persistant variables
 uint8_t state;
@@ -73,14 +75,15 @@ void reset() {
 
 void loop() {
 
-    if (state == STARTUP) {
+    if (state == STOP) {
+      
+    } else if (state == STARTUP) {
         uint8_t pixel = index++;
         setColor(pixel, COLORS[pixel % 2]);
-        if (index == PIXELS) {
+        if (index > PIXELS) { // == will skip last pixel w/ reset
             reset();
             state = INTRO;
             Serial.println("INTRO");      
-            return;      
         }
     }  
 
@@ -90,7 +93,6 @@ void loop() {
         if (index == POPULATION) {
             state = PLAY;    
             Serial.println("PLAY");
-            return;
         }
     } 
 
@@ -100,24 +102,18 @@ void loop() {
                 // console.log("hit max");
                 state = HOLD;
                 Serial.println("HOLD");
-                return;
+                break;
             }
             uint8_t pixel = sequence[index++];
             index %= PIXELS;
             if (getColor(pixel) == OFF_COLOR) {
                 continue;
             }
-            Serial.print("pixel w agent "); 
-            Serial.println(pixel);
             uint8_t happiness = calcHappiness(pixel, NEIGHBORS[pixel]);
-            Serial.print("happiness ");             
-            Serial.println(happiness);
             uint8_t happiest_neighbor = NONE;
             uint8_t max_happiness = 0;
+            uint8_t offset = random(0, 8);            
             for (uint8_t j=0; j<8; j++) {
-                Serial.print("j");
-                Serial.println(j);
-                uint8_t offset = random(0, 8);
                 uint8_t n = (j + offset) % 8;
                 if (NEIGHBORS[pixel][n] == NONE) {
                     continue;
@@ -130,12 +126,12 @@ void loop() {
                     }
                 }
             }
-            Serial.print("happiest_neighbor ");
-            Serial.println(happiest_neighbor);
-            if (happiest_neighbor != NONE && max_happiness >= happiness) {
-                moveAgent(pixel, happiest_neighbor);
-                steps++;
-                break;
+            if (happiest_neighbor != NONE) {
+                if (max_happiness >= happiness) {
+                    moveAgent(pixel, happiest_neighbor);
+                    steps++;
+                    break;
+               }
             }
             
         } 
@@ -146,7 +142,6 @@ void loop() {
         if (countdown == 0) {
             state = CODA;
             Serial.println("CODA");            
-            return;
         }
     }
 
@@ -157,7 +152,7 @@ void loop() {
                 reset();              
                 state = INTRO;
                 Serial.println("INTRO");
-                return;
+                break;
             }                    
             uint8_t pixel = sequence[index++];
             index %= PIXELS;
@@ -171,40 +166,40 @@ void loop() {
 
     updateTransitions();
     strip.show();
-//    delay(10);
+    delay(DELAY);
 
 }
 
 void initNeighbors() {
     Serial.println("initNeighbors()");
     for (uint8_t pixel=0; pixel<PIXELS; pixel++) {
-        NEIGHBORS[0][0] = pixel - 1;
-        NEIGHBORS[0][1] = pixel + 1;
-        NEIGHBORS[0][2] = pixel + PIXELS_PER_ROW - 1;
-        NEIGHBORS[0][3] = pixel + PIXELS_PER_ROW;
-        NEIGHBORS[0][4] = pixel + PIXELS_PER_ROW + 1;
-        NEIGHBORS[0][5] = pixel - PIXELS_PER_ROW - 1;
-        NEIGHBORS[0][6] = pixel - PIXELS_PER_ROW;
-        NEIGHBORS[0][7] = pixel - PIXELS_PER_ROW + 1;
+        NEIGHBORS[pixel][0] = pixel - 1;
+        NEIGHBORS[pixel][1] = pixel + 1;
+        NEIGHBORS[pixel][2] = pixel + PIXELS_PER_ROW - 1;
+        NEIGHBORS[pixel][3] = pixel + PIXELS_PER_ROW;
+        NEIGHBORS[pixel][4] = pixel + PIXELS_PER_ROW + 1;
+        NEIGHBORS[pixel][5] = pixel - PIXELS_PER_ROW - 1;
+        NEIGHBORS[pixel][6] = pixel - PIXELS_PER_ROW;
+        NEIGHBORS[pixel][7] = pixel - PIXELS_PER_ROW + 1;
         if (pixel < PIXELS_PER_ROW) {
-            NEIGHBORS[0][5] = NONE;
-            NEIGHBORS[0][6] = NONE;
-            NEIGHBORS[0][7] = NONE;
+            NEIGHBORS[pixel][5] = NONE;
+            NEIGHBORS[pixel][6] = NONE;
+            NEIGHBORS[pixel][7] = NONE;
         }
         if (pixel >= PIXELS - PIXELS_PER_ROW) {
-            NEIGHBORS[0][2] = NONE;
-            NEIGHBORS[0][3] = NONE;
-            NEIGHBORS[0][4] = NONE;
+            NEIGHBORS[pixel][2] = NONE;
+            NEIGHBORS[pixel][3] = NONE;
+            NEIGHBORS[pixel][4] = NONE;
         }
         if (pixel % PIXELS_PER_ROW == 0) {
-            NEIGHBORS[0][0] = NONE;
-            NEIGHBORS[0][2] = NONE;
-            NEIGHBORS[0][5] = NONE;
+            NEIGHBORS[pixel][0] = NONE;
+            NEIGHBORS[pixel][2] = NONE;
+            NEIGHBORS[pixel][5] = NONE;
         }
         if (pixel % PIXELS_PER_ROW == PIXELS_PER_ROW - 1) {
-            NEIGHBORS[0][1] = NONE;
-            NEIGHBORS[0][4] = NONE;
-            NEIGHBORS[0][7] = NONE;
+            NEIGHBORS[pixel][1] = NONE;
+            NEIGHBORS[pixel][4] = NONE;
+            NEIGHBORS[pixel][7] = NONE;
         }
     }
 }
@@ -241,8 +236,9 @@ uint32_t getColor(uint8_t pixel) {
 
 void resetColors() {
     for (uint8_t pixel=0; pixel<PIXELS; pixel++) {
+        paintColor(pixel, OFF_COLOR);
         pixel_colors[pixel] = OFF_COLOR;
-        previous_pixel_colors[pixel] = OFF_COLOR;
+        previous_pixel_colors[pixel] = OFF_COLOR;        
     }
 }
 
@@ -254,7 +250,7 @@ void setColor(uint8_t pixel, uint32_t color) {
     }
 }
 
-void updateTransitions() {    
+void updateTransitions() {   
     for (uint8_t pixel=0; pixel<PIXELS; pixel++) {
         if (transitions[pixel] != NONE) {
             uint32_t c1 = previous_pixel_colors[pixel];
