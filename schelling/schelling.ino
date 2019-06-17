@@ -275,10 +275,22 @@ void updateTransitions() {
     }
 }
 
-uint32_t lerpColor(uint32_t c1, uint32_t c2, float pos) {
-    // figure out
-    return c2;
+
+uint32_t lerpColor(uint32_t current, uint32_t target, float pos) {
+    pos = (pos * .5) + .5;
+    // yes, linear RGB fade isnt correct, but it's used as a very brief effect
+    float current_red = (uint8_t)(current >> 16);
+    float target_red = (uint8_t)(target >> 16);
+    float current_green = (uint8_t)(current >> 8);
+    float target_green = (uint8_t)(target >> 8);
+    float current_blue = (uint8_t)(current);
+    float target_blue = (uint8_t)(target);
+    float result_red = ((current_red * (1 - pos)) + (target_red * pos));
+    float result_green = ((current_green * (1 - pos)) + (target_green * pos));
+    float result_blue = ((current_blue * (1 - pos)) + (target_blue * pos));
+    return strip.Color(result_red, result_green, result_blue);
 }
+
 
 void paintColor(uint8_t pixel, uint32_t color) { 
     int row = floor(pixel / PIXELS_PER_ROW);
