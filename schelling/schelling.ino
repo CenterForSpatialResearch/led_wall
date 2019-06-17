@@ -7,8 +7,8 @@ const uint8_t TYPES = 2;
 
 const uint8_t DATA_PIN = 6;
 const int DELAY = 50;
-const int MAX_STEPS = 2500;
-const uint8_t COUNTDOWN = 100;
+const int MAX_STEPS = 1000;
+const uint8_t COUNTDOWN = 10;
 
 // dependent constants
 const uint8_t PIXELS = PIXELS_PER_ROW * ROWS;
@@ -35,7 +35,7 @@ const uint8_t STOP = 5;
 // declare persistant variables
 uint8_t state;
 uint8_t index;
-uint8_t steps;
+int steps;
 uint8_t countdown;
 
 // allocate arrays
@@ -112,6 +112,8 @@ void loop() {
         while (true) {
             if (steps == MAX_STEPS) {
                 // console.log("hit max");
+                Serial.print("free memory: ");
+                Serial.println(freeMemory());
                 state = HOLD;
                 Serial.println("HOLD");
                 break;
@@ -142,6 +144,9 @@ void loop() {
                 if (max_happiness >= happiness) {
                     moveAgent(pixel, happiest_neighbor);
                     steps++;
+                    if (steps % 100 == 0) {
+                        Serial.println(steps);
+                    }
                     break;
                }
             }
@@ -299,4 +304,22 @@ void paintColor(uint8_t pixel, uint32_t color) {
     pixel = (row * PIXELS_PER_ROW) + column;                          // adjusted pixel
     int led = (pixel * 4) - (floor(pixel / PIXELS_PER_ROW) * 3);  
     strip.setPixelColor(led, color);  
+}
+
+#ifdef __arm__
+// should use uinstd.h to define sbrk but Due causes a conflict
+extern "C" char* sbrk(int incr);
+#else  // __ARM__
+extern char *__brkval;
+#endif  // __arm__
+
+int freeMemory() {
+  char top;
+#ifdef __arm__
+  return &top - reinterpret_cast<char*>(sbrk(0));
+#elif defined(CORE_TEENSY) || (ARDUINO > 103 && ARDUINO != 151)
+  return &top - __brkval;
+#else  // __arm__
+  return __brkval ? &top - __brkval : &top - __malloc_heap_start;
+#endif  // __arm__
 }
