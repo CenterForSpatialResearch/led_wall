@@ -1,24 +1,25 @@
 #include <Adafruit_NeoPixel.h>
 
 // settable params
-const uint8_t DATA_PIN = 6;
-const uint8_t PIXELS_PER_ROW = 5;//15;
-const uint8_t ROWS = 5;//15;
+const uint8_t PIXELS_PER_ROW = 15;
+const uint8_t ROWS = 8;//15;
 const uint8_t TYPES = 2;
-const int DELAY = 100;
+
+const uint8_t DATA_PIN = 6;
+const int DELAY = 50;
 const int MAX_STEPS = 2500;
 const uint8_t COUNTDOWN = 100;
 
 // dependent constants
 const uint8_t PIXELS = PIXELS_PER_ROW * ROWS;
-const int LEDS_PER_ROW = (((PIXELS_PER_ROW - 1) * 4) + 1) * ROWS;
+const int LEDS_PER_ROW = (((PIXELS_PER_ROW - 1) * 4) + 1);
 const uint8_t POPULATION = floor(PIXELS / 2);
 const uint8_t NONE = 255; // max value for uint8_t, restricts this to the 15x15 grid
 
 Adafruit_NeoPixel strip(LEDS_PER_ROW * ROWS, DATA_PIN, NEO_GRB + NEO_KHZ800);
 
 // colors
-const uint32_t COLOR_1 = strip.Color(255, 0, 100);
+const uint32_t COLOR_1 = strip.Color(255, 10, 25);
 const uint32_t COLOR_2 = strip.Color(0, 100, 255);
 const uint32_t COLORS[] = {COLOR_1, COLOR_2};
 const uint32_t OFF_COLOR = strip.Color(0, 0, 0);
@@ -49,6 +50,16 @@ void setup() {
     Serial.begin(19200);
     Serial.println("setup()");
     randomSeed(analogRead(0));
+    Serial.print("PIXELS_PER_ROW ");  
+    Serial.println(PIXELS_PER_ROW);  
+    Serial.print("ROWS ");  
+    Serial.println(ROWS);  
+    Serial.print("PIXELS ");  
+    Serial.println(PIXELS); 
+    Serial.print("LEDS_PER_ROW ");  
+    Serial.println(LEDS_PER_ROW);    
+    Serial.print("TOTAL LEDS ");
+    Serial.println(strip.numPixels());  
     strip.begin();
     strip.setBrightness(255);
     initNeighbors();
@@ -91,6 +102,7 @@ void loop() {
         uint8_t pixel = sequence[index++];
         setColor(pixel, COLORS[index % TYPES]);
         if (index == POPULATION) {
+            state = STOP;
             state = PLAY;    
             Serial.println("PLAY");
         }
@@ -268,7 +280,11 @@ uint32_t lerpColor(uint32_t c1, uint32_t c2, float pos) {
     return c2;
 }
 
-void paintColor(uint8_t pixel, uint32_t color) {    
+void paintColor(uint8_t pixel, uint32_t color) { 
+    int row = floor(pixel / PIXELS_PER_ROW);
+    int column = pixel - (row * PIXELS_PER_ROW);     
+    column = row % 2 > 0 ? (PIXELS_PER_ROW - 1) - column : column;    // flip odd rows
+    pixel = (row * PIXELS_PER_ROW) + column;                          // adjusted pixel
     int led = (pixel * 4) - (floor(pixel / PIXELS_PER_ROW) * 3);  
     strip.setPixelColor(led, color);  
 }
