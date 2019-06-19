@@ -2,7 +2,7 @@
 
 // settable params
 const uint8_t PIXELS_PER_ROW = 15;
-const uint8_t ROWS = 8;//15;
+const uint8_t ROWS = 15;
 const uint8_t TYPES = 2;
 
 const uint8_t DATA_PIN = 6;
