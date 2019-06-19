@@ -27,7 +27,7 @@ const uint32_t COLORS[] = {   strip.Color(255, 10, 75), strip.Color(50, 100, 255
                           };                         
 const uint32_t OFF_COLOR = strip.Color(0, 0, 0);
 const uint8_t TOTAL_PAIRS = 4;
-uint8_t color_offset = 6;
+uint8_t color_offset = 0;
 
 // states
 const uint8_t STARTUP = 0;
