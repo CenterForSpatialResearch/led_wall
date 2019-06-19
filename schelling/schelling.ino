@@ -8,7 +8,8 @@ const uint8_t TYPES = 2;
 const uint8_t DATA_PIN = 6;
 const int DELAY = 50;
 const int MAX_STEPS = 1000;
-const uint8_t COUNTDOWN = 10;
+const uint8_t COUNTDOWN = 50;
+const uint8_t SKIP = 3;
 
 // dependent constants
 const uint8_t PIXELS = PIXELS_PER_ROW * ROWS;
@@ -19,10 +20,14 @@ const uint8_t NONE = 255; // max value for uint8_t, restricts this to the 15x15 
 Adafruit_NeoPixel strip(LEDS_PER_ROW * ROWS, DATA_PIN, NEO_GRB + NEO_KHZ800);
 
 // colors
-const uint32_t COLOR_1 = strip.Color(255, 10, 25);
-const uint32_t COLOR_2 = strip.Color(0, 100, 255);
-const uint32_t COLORS[] = {COLOR_1, COLOR_2};
+const uint32_t COLORS[] = {   strip.Color(255, 10, 75), strip.Color(50, 100, 255),     // red / blue
+                              strip.Color(255, 255, 0), strip.Color(255, 255, 255),   // yellow / white
+                              strip.Color(0, 0, 255), strip.Color(0, 255, 255),        // blue / aqua
+                              strip.Color(0, 255, 0), strip.Color(0, 255, 255)        // green / aqua
+                          };                         
 const uint32_t OFF_COLOR = strip.Color(0, 0, 0);
+const uint8_t TOTAL_PAIRS = 4;
+uint8_t color_offset = 6;
 
 // states
 const uint8_t STARTUP = 0;
@@ -35,7 +40,8 @@ const uint8_t STOP = 5;
 // declare persistant variables
 uint8_t state;
 uint8_t index;
-int steps;
+uint16_t frame;
+uint16_t steps;
 uint8_t countdown;
 
 // allocate arrays
@@ -73,6 +79,7 @@ void reset() {
     Serial.println("reset()");
     index = 0;
     steps = 0;   
+    frame = 0;
     countdown = COUNTDOWN;
     resetColors();
     for (uint8_t t=0; t<PIXELS; t++) {
@@ -90,7 +97,7 @@ void loop() {
       
     } else if (state == STARTUP) {
         uint8_t pixel = index++;
-        setColor(pixel, COLORS[pixel % 2]);
+        setColor(pixel, COLORS[color_offset + (pixel % 2)]);
         if (index > PIXELS) { // == will skip last pixel w/ reset
             reset();
             state = INTRO;
@@ -100,7 +107,7 @@ void loop() {
 
     else if (state == INTRO) {
         uint8_t pixel = sequence[index++];
-        setColor(pixel, COLORS[index % TYPES]);
+        setColor(pixel, COLORS[color_offset + (index % TYPES)]);
         if (index == POPULATION) {
             state = STOP;
             state = PLAY;    
@@ -109,49 +116,50 @@ void loop() {
     } 
 
     else if (state == PLAY) {
-        while (true) {
-            if (steps == MAX_STEPS) {
-                // console.log("hit max");
-                Serial.print("free memory: ");
-                Serial.println(freeMemory());
-                state = HOLD;
-                Serial.println("HOLD");
-                break;
-            }
-            uint8_t pixel = sequence[index++];
-            index %= PIXELS;
-            if (getColor(pixel) == OFF_COLOR) {
-                continue;
-            }
-            uint8_t happiness = calcHappiness(pixel, NEIGHBORS[pixel]);
-            uint8_t happiest_neighbor = NONE;
-            uint8_t max_happiness = 0;
-            uint8_t offset = random(0, 8);            
-            for (uint8_t j=0; j<8; j++) {
-                uint8_t n = (j + offset) % 8;
-                if (NEIGHBORS[pixel][n] == NONE) {
+        if (frame++ % SKIP == 0) {
+            while (true) {
+                if (steps == MAX_STEPS) {
+                    // console.log("hit max");
+                    Serial.print("free memory: ");
+                    Serial.println(freeMemory());
+                    state = HOLD;
+                    Serial.println("HOLD");
+                    break;
+                }
+                uint8_t pixel = sequence[index++];
+                index %= PIXELS;
+                if (getColor(pixel) == OFF_COLOR) {
                     continue;
                 }
-                if (getColor(NEIGHBORS[pixel][n]) == OFF_COLOR) {
-                    uint8_t n_happiness = calcHappiness(pixel, NEIGHBORS[NEIGHBORS[pixel][n]]);
-                    if (n_happiness >= max_happiness) {
-                        max_happiness = n_happiness;
-                        happiest_neighbor = NEIGHBORS[pixel][n];
+                uint8_t happiness = calcHappiness(pixel, NEIGHBORS[pixel]);
+                uint8_t happiest_neighbor = NONE;
+                uint8_t max_happiness = 0;
+                uint8_t offset = random(0, 8);            
+                for (uint8_t j=0; j<8; j++) {
+                    uint8_t n = (j + offset) % 8;
+                    if (NEIGHBORS[pixel][n] == NONE) {
+                        continue;
+                    }
+                    if (getColor(NEIGHBORS[pixel][n]) == OFF_COLOR) {
+                        uint8_t n_happiness = calcHappiness(pixel, NEIGHBORS[NEIGHBORS[pixel][n]]);
+                        if (n_happiness >= max_happiness) {
+                            max_happiness = n_happiness;
+                            happiest_neighbor = NEIGHBORS[pixel][n];
+                        }
                     }
                 }
-            }
-            if (happiest_neighbor != NONE) {
-                if (max_happiness >= happiness) {
-                    moveAgent(pixel, happiest_neighbor);
-                    steps++;
-                    if (steps % 100 == 0) {
-                        Serial.println(steps);
-                    }
-                    break;
-               }
-            }
-            
-        } 
+                if (happiest_neighbor != NONE) {
+                    if (max_happiness >= happiness) {
+                        moveAgent(pixel, happiest_neighbor);
+                        steps++;
+                        if (steps % 100 == 0) {
+                            Serial.println(steps);
+                        }
+                        break;
+                   }
+                }              
+            } 
+        }
     }
 
     else if (state == HOLD) {
@@ -169,6 +177,8 @@ void loop() {
                 reset();              
                 state = INTRO;
                 Serial.println("INTRO");
+                color_offset += 2;
+                color_offset %= (TOTAL_PAIRS * 2);
                 break;
             }                    
             uint8_t pixel = sequence[index++];
@@ -303,7 +313,7 @@ void paintColor(uint8_t pixel, uint32_t color) {
     column = row % 2 > 0 ? (PIXELS_PER_ROW - 1) - column : column;    // flip odd rows
     pixel = (row * PIXELS_PER_ROW) + column;                          // adjusted pixel
     int led = (pixel * 4) - (floor(pixel / PIXELS_PER_ROW) * 3);  
-    strip.setPixelColor(led, color);  
+    strip.setPixelColor(led, strip.gamma32(color));  
 }
 
 #ifdef __arm__
