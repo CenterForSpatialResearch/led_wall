@@ -10,10 +10,12 @@ const MAX_STEPS = 2500
 const COUNTDOWN = 100
 const COLORS = [[255, 0, 0], [0, 0, 255], [100, 255, 0], [0, 255, 255], [0, 0, 255]]
 const OFF_COLOR = [255, 255, 255]
+const TRANSITION = 2
 
 // dependent constants
 const PIXELS = PIXELS_PER_ROW * ROWS
-const POPULATION = Math.floor(PIXELS / 2)
+// const POPULATION = Math.floor(PIXELS / 2)
+const POPULATION = 2
 
 // states
 const STARTUP = 0
@@ -52,7 +54,7 @@ function setup() {
     textFont('monospace')
     strokeWeight(1)
     reset()
-    state = STARTUP
+    state = INTRO
 }
 
 // reset process
@@ -235,7 +237,7 @@ function setColor(pixel, color) {
     if (color != pixel_colors[pixel]) {
         previous_pixel_colors[pixel] = pixel_colors[pixel]
         pixel_colors[pixel] = color
-        transitions[pixel] = 2
+        transitions[pixel] = TRANSITION
     }
 }
 
@@ -244,7 +246,7 @@ function updateTransitions() {
         if (transitions[pixel] >= 0) {
             let c1 = previous_pixel_colors[pixel]
             let c2 = pixel_colors[pixel]
-            let pos = (3 - transitions[pixel]) / 3
+            let pos = ((TRANSITION + 1) - transitions[pixel]) / (TRANSITION + 1)
             let c = lerpColor(color(c1), color(c2), pos)
             paintColor(pixel, c)
             transitions[pixel]--                        

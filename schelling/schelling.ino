@@ -1,15 +1,16 @@
 #include <Adafruit_NeoPixel.h>
 
+const uint8_t DATA_PIN = 6;
+
 // settable params
 const uint8_t PIXELS_PER_ROW = 15;
 const uint8_t ROWS = 15;
 const uint8_t TYPES = 2;
-
-const uint8_t DATA_PIN = 6;
 const int DELAY = 50;
 const int MAX_STEPS = 1000;
 const uint8_t COUNTDOWN = 50;
 const uint8_t SKIP = 3;
+const uint8_t TRANSITION = 2;
 
 // dependent constants
 const uint8_t PIXELS = PIXELS_PER_ROW * ROWS;
@@ -44,14 +45,13 @@ uint16_t frame;
 uint16_t steps;
 uint8_t countdown;
 
-// allocate arrays
+// allocate pixel state arrays
 uint8_t NEIGHBORS[PIXELS][8];
 uint32_t pixel_colors[PIXELS];
 uint32_t previous_pixel_colors[PIXELS];
 uint8_t sequence[PIXELS];
 uint8_t transitions[PIXELS];
 
-// p5 specific initialization
 void setup() {
     Serial.begin(19200);
     Serial.println("setup()");
@@ -70,7 +70,7 @@ void setup() {
     strip.setBrightness(255);
     initNeighbors();
     reset();
-    state = STARTUP;
+    state = INTRO;
     Serial.println("STARTUP");
 }
 
@@ -82,11 +82,9 @@ void reset() {
     frame = 0;
     countdown = COUNTDOWN;
     resetColors();
-    for (uint8_t t=0; t<PIXELS; t++) {
-        transitions[t] = NONE;
-    }    
-    for (uint8_t s=0; s<PIXELS; s++) {
-        sequence[s] = s;
+    for (uint8_t pixel=0; pixel<PIXELS; pixel++) {
+        transitions[pixel] = NONE;
+        sequence[pixel] = pixel;
     }
     shuffleSequence(sequence);
 }
@@ -273,7 +271,7 @@ void setColor(uint8_t pixel, uint32_t color) {
     if (color != pixel_colors[pixel]) {
         previous_pixel_colors[pixel] = pixel_colors[pixel];
         pixel_colors[pixel] = color;
-        transitions[pixel] = 2;
+        transitions[pixel] = TRANSITION;
     }
 }
 
@@ -282,7 +280,7 @@ void updateTransitions() {
         if (transitions[pixel] != NONE) {
             uint32_t c1 = previous_pixel_colors[pixel];
             uint32_t c2 = pixel_colors[pixel];
-            float pos = (3 - transitions[pixel]) / 3;            
+            float pos = ((TRANSITION + 1) - transitions[pixel]) / (TRANSITION + 1);            
             uint32_t c = lerpColor(c1, c2, pos);           
             paintColor(pixel, c);
             transitions[pixel]--;          // -1 will wrap to 255 which is NONE             
@@ -292,7 +290,7 @@ void updateTransitions() {
 
 
 uint32_t lerpColor(uint32_t current, uint32_t target, float pos) {
-    pos = (pos * .5) + .5;
+    pos = (pos * .5) + .5;  // hmm
     // yes, linear RGB fade isnt correct, but it's used as a very brief effect
     float current_red = (uint8_t)(current >> 16);
     float target_red = (uint8_t)(target >> 16);
