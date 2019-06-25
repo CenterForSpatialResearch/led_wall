@@ -8,14 +8,16 @@ const uint8_t ROWS = 15;
 const uint8_t TYPES = 2;
 const int DELAY = 60;
 const int MAX_STEPS = 1000;
-const uint8_t COUNTDOWN = 50;
+const uint8_t COUNTDOWN = 150;
 const uint8_t SKIP = 3;
 const uint8_t TRANSITION = 2;
+const uint8_t ALLOW_DISCRIMINATION = 0;
 
 // dependent constants
 const uint8_t PIXELS = PIXELS_PER_ROW * ROWS;
 const int LEDS_PER_ROW = (((PIXELS_PER_ROW - 1) * 4) + 1);
-const uint8_t POPULATION = floor(PIXELS / 2);
+//const uint8_t POPULATION = floor(PIXELS / 2);
+const uint8_t POPULATION = 150;
 const uint8_t NONE = 255; // max value for uint8_t, restricts this to the 15x15 grid
 
 Adafruit_NeoPixel strip(LEDS_PER_ROW * ROWS, DATA_PIN, NEO_GRB + NEO_KHZ800);
@@ -28,7 +30,6 @@ const uint32_t COLORS[] = {   strip.Color(255, 10, 75), strip.Color(50, 100, 255
                           };                         
 const uint32_t OFF_COLOR = strip.Color(0, 0, 0);
 const uint8_t TOTAL_PAIRS = 4;
-uint8_t color_offset = 0;
 
 // states
 const uint8_t STARTUP = 0;
@@ -39,11 +40,14 @@ const uint8_t CODA = 4;
 const uint8_t STOP = 5;
 
 // declare persistant variables
+uint8_t color_offset;
 uint8_t state;
-uint8_t index;
 uint16_t frame;
+uint8_t index;
 uint16_t steps;
+uint8_t no_moves;
 uint8_t countdown;
+
 
 // allocate pixel state arrays
 uint8_t NEIGHBORS[PIXELS][8];
@@ -51,12 +55,13 @@ uint32_t pixel_colors[PIXELS];
 uint32_t previous_pixel_colors[PIXELS];
 uint8_t sequence[PIXELS];
 uint8_t transitions[PIXELS];
-uint8_t previous[PIXELS];
+uint8_t agent_came_from[PIXELS];
 
 void setup() {
     Serial.begin(19200);
     Serial.println("setup()");
-    randomSeed(analogRead(0));
+    randomSeed(analogRead(A0));
+    color_offset = random(0, (TOTAL_PAIRS / 2) + 1) * 2;    
     Serial.print("PIXELS_PER_ROW ");  
     Serial.println(PIXELS_PER_ROW);  
     Serial.print("ROWS ");  
@@ -71,22 +76,23 @@ void setup() {
     strip.setBrightness(255);
     initNeighbors();
     reset();
-    state = INTRO;
+    state = STARTUP;
     Serial.println("STARTUP");
 }
 
 // reset process
 void reset() {
     Serial.println("reset()");
+    frame = 0;
     index = 0;
     steps = 0;   
-    frame = 0;
+    no_moves = 0;
     countdown = COUNTDOWN;
     resetColors();
     for (uint8_t pixel=0; pixel<PIXELS; pixel++) {
         transitions[pixel] = NONE;
         sequence[pixel] = pixel;
-        previous[pixel] = NONE;
+        agent_came_from[pixel] = NONE;
     }
     shuffleSequence(sequence);
 }
@@ -131,12 +137,12 @@ void loop() {
                 if (getColor(pixel) == OFF_COLOR) {
                     continue;
                 }
+                Serial.print("\tagent @ ");
+                Serial.print(index);
                 uint8_t happiness = calcHappiness(pixel, NEIGHBORS[pixel]);
                 uint8_t happiest_neighbor = NONE;
                 uint8_t max_happiness = happiness;
                 uint8_t offset = random(0, 8);            
-//                uint8_t offset = 0;
-//                uint8_t offset = getColor(pixel) == COLORS[color_offset] ? 2 : 6;   // different biases for two colors
                 for (uint8_t j=0; j<8; j++) {
                     uint8_t n = (j + offset) % 8;
                     if (NEIGHBORS[pixel][n] == NONE) {
@@ -150,17 +156,25 @@ void loop() {
                         }
                     }
                 }
-                if (happiest_neighbor != NONE && happiest_neighbor != previous[pixel]) {
-                    if (max_happiness >= happiness) {
-                        moveAgent(pixel, happiest_neighbor);
-                        index = getIndex(happiest_neighbor);
+                if (happiest_neighbor != NONE && happiest_neighbor != agent_came_from[pixel]) {
+                    Serial.print("\t-> ");                
+                    Serial.println(happiest_neighbor);
+                    moveAgent(pixel, happiest_neighbor);
+                    index = getIndex(happiest_neighbor);
+                    steps++;
+                    Serial.print("[");
+                    Serial.print(steps);
+                    Serial.println("]");
+                    no_moves = 0;
+                    break;
+                } else { 
+                    Serial.println("\tx");
+                    //  agent_came_from[pixel] = NONE;  // results in less polarization
+                    no_moves++;                           
+                    if (no_moves >= PIXELS) {
                         steps++;
-                        if (steps % 100 == 0) {
-                            Serial.println(steps);
-                        }
-                        break;
-                   }
-                }              
+                    }
+                }
             } 
         }
     }
@@ -241,13 +255,17 @@ uint8_t calcHappiness(uint8_t pixel, uint8_t neighbors[]) {
     for (uint8_t n=0; n<8; n++) {
         if (getColor(neighbors[n]) == getColor(pixel)) {            
             same++;
+        } else if (getColor(neighbors[n]) != OFF_COLOR && same > 0) {
+            if (ALLOW_DISCRIMINATION > 0) {
+                same--;          
+            }
         }
     }    
     return same;
 }
 
 void moveAgent(uint8_t current_pixel, uint8_t new_pixel) {
-    previous[new_pixel] = current_pixel;
+    agent_came_from[new_pixel] = current_pixel;
     setColor(new_pixel, getColor(current_pixel));
     setColor(current_pixel, OFF_COLOR);
 }
