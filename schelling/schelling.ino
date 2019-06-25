@@ -6,7 +6,7 @@ const uint8_t DATA_PIN = 6;
 const uint8_t PIXELS_PER_ROW = 15;
 const uint8_t ROWS = 15;
 const uint8_t TYPES = 2;
-const int DELAY = 50;
+const int DELAY = 60;
 const int MAX_STEPS = 1000;
 const uint8_t COUNTDOWN = 50;
 const uint8_t SKIP = 3;
@@ -51,6 +51,7 @@ uint32_t pixel_colors[PIXELS];
 uint32_t previous_pixel_colors[PIXELS];
 uint8_t sequence[PIXELS];
 uint8_t transitions[PIXELS];
+uint8_t previous[PIXELS];
 
 void setup() {
     Serial.begin(19200);
@@ -70,7 +71,7 @@ void setup() {
     strip.setBrightness(255);
     initNeighbors();
     reset();
-    state = STARTUP;
+    state = INTRO;
     Serial.println("STARTUP");
 }
 
@@ -85,6 +86,7 @@ void reset() {
     for (uint8_t pixel=0; pixel<PIXELS; pixel++) {
         transitions[pixel] = NONE;
         sequence[pixel] = pixel;
+        previous[pixel] = NONE;
     }
     shuffleSequence(sequence);
 }
@@ -131,8 +133,10 @@ void loop() {
                 }
                 uint8_t happiness = calcHappiness(pixel, NEIGHBORS[pixel]);
                 uint8_t happiest_neighbor = NONE;
-                uint8_t max_happiness = 0;
+                uint8_t max_happiness = happiness;
                 uint8_t offset = random(0, 8);            
+//                uint8_t offset = 0;
+//                uint8_t offset = getColor(pixel) == COLORS[color_offset] ? 2 : 6;   // different biases for two colors
                 for (uint8_t j=0; j<8; j++) {
                     uint8_t n = (j + offset) % 8;
                     if (NEIGHBORS[pixel][n] == NONE) {
@@ -146,9 +150,10 @@ void loop() {
                         }
                     }
                 }
-                if (happiest_neighbor != NONE) {
+                if (happiest_neighbor != NONE && happiest_neighbor != previous[pixel]) {
                     if (max_happiness >= happiness) {
                         moveAgent(pixel, happiest_neighbor);
+                        index = getIndex(happiest_neighbor);
                         steps++;
                         if (steps % 100 == 0) {
                             Serial.println(steps);
@@ -198,31 +203,33 @@ void loop() {
 void initNeighbors() {
     Serial.println("initNeighbors()");
     for (uint8_t pixel=0; pixel<PIXELS; pixel++) {
-        NEIGHBORS[pixel][0] = pixel - 1;
-        NEIGHBORS[pixel][1] = pixel + 1;
-        NEIGHBORS[pixel][2] = pixel + PIXELS_PER_ROW - 1;
-        NEIGHBORS[pixel][3] = pixel + PIXELS_PER_ROW;
-        NEIGHBORS[pixel][4] = pixel + PIXELS_PER_ROW + 1;
-        NEIGHBORS[pixel][5] = pixel - PIXELS_PER_ROW - 1;
-        NEIGHBORS[pixel][6] = pixel - PIXELS_PER_ROW;
-        NEIGHBORS[pixel][7] = pixel - PIXELS_PER_ROW + 1;
+
+        NEIGHBORS[pixel][0] = pixel - PIXELS_PER_ROW - 1;
+        NEIGHBORS[pixel][1] = pixel - PIXELS_PER_ROW;
+        NEIGHBORS[pixel][2] = pixel - PIXELS_PER_ROW + 1;
+        NEIGHBORS[pixel][3] = pixel - 1;        
+        NEIGHBORS[pixel][4] = pixel + 1;
+        NEIGHBORS[pixel][5] = pixel + PIXELS_PER_ROW - 1;
+        NEIGHBORS[pixel][6] = pixel + PIXELS_PER_ROW;
+        NEIGHBORS[pixel][7] = pixel + PIXELS_PER_ROW + 1;
+
         if (pixel < PIXELS_PER_ROW) {
+            NEIGHBORS[pixel][0] = NONE;
+            NEIGHBORS[pixel][1] = NONE;
+            NEIGHBORS[pixel][2] = NONE;
+        }
+        if (pixel >= PIXELS - PIXELS_PER_ROW) {
             NEIGHBORS[pixel][5] = NONE;
             NEIGHBORS[pixel][6] = NONE;
             NEIGHBORS[pixel][7] = NONE;
         }
-        if (pixel >= PIXELS - PIXELS_PER_ROW) {
-            NEIGHBORS[pixel][2] = NONE;
-            NEIGHBORS[pixel][3] = NONE;
-            NEIGHBORS[pixel][4] = NONE;
-        }
         if (pixel % PIXELS_PER_ROW == 0) {
             NEIGHBORS[pixel][0] = NONE;
-            NEIGHBORS[pixel][2] = NONE;
+            NEIGHBORS[pixel][3] = NONE;
             NEIGHBORS[pixel][5] = NONE;
         }
         if (pixel % PIXELS_PER_ROW == PIXELS_PER_ROW - 1) {
-            NEIGHBORS[pixel][1] = NONE;
+            NEIGHBORS[pixel][2] = NONE;
             NEIGHBORS[pixel][4] = NONE;
             NEIGHBORS[pixel][7] = NONE;
         }
@@ -240,6 +247,7 @@ uint8_t calcHappiness(uint8_t pixel, uint8_t neighbors[]) {
 }
 
 void moveAgent(uint8_t current_pixel, uint8_t new_pixel) {
+    previous[new_pixel] = current_pixel;
     setColor(new_pixel, getColor(current_pixel));
     setColor(current_pixel, OFF_COLOR);
 }
@@ -252,6 +260,12 @@ void shuffleSequence(uint8_t a[]) {
         r = random(PIXELS);
         a[i] = a[r];
         a[r] = temp;
+    }
+}
+
+uint8_t getIndex(uint8_t pixel) {
+    for (uint8_t index=0; index<PIXELS; index++) {
+        if (sequence[index] == pixel) return index;
     }
 }
 
