@@ -42,9 +42,9 @@ const uint8_t STOP = 5;
 // declare persistant variables
 uint8_t color_offset;
 uint8_t state;
-uint16_t frame;
+uint8_t frame;
 uint8_t index;
-uint16_t steps;
+uint8_t steps;
 uint8_t no_moves;
 uint8_t countdown;
 
