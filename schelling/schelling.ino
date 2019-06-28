@@ -10,7 +10,7 @@ const int DELAY = 60;
 const uint16_t MAX_STEPS = 1000;
 const uint8_t COUNTDOWN = 150;
 const uint8_t SKIP = 3;
-const uint8_t TRANSITION = 2;
+const uint8_t TRANSITION = 1;
 const uint8_t ALLOW_DISCRIMINATION = 0;
 
 // dependent constants
