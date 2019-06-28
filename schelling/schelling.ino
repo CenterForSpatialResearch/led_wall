@@ -7,7 +7,7 @@ const uint8_t PIXELS_PER_ROW = 15;
 const uint8_t ROWS = 15;
 const uint8_t TYPES = 2;
 const int DELAY = 60;
-const int MAX_STEPS = 1000;
+const uint16_t MAX_STEPS = 1000;
 const uint8_t COUNTDOWN = 150;
 const uint8_t SKIP = 3;
 const uint8_t TRANSITION = 2;
@@ -44,7 +44,7 @@ uint8_t color_offset;
 uint8_t state;
 uint8_t frame;
 uint8_t index;
-uint8_t steps;
+uint16_t steps;
 uint8_t no_moves;
 uint8_t countdown;
 
@@ -124,8 +124,8 @@ void loop() {
     else if (state == PLAY) {
         if (frame++ % SKIP == 0) {
             while (true) {
-                if (steps == MAX_STEPS) {
-                    // console.log("hit max");
+                if (steps >= MAX_STEPS) {
+                    Serial.print("hit max");
                     Serial.print("free memory: ");
                     Serial.println(freeMemory());
                     state = HOLD;
