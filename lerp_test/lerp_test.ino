@@ -2,7 +2,7 @@
 
 const int DATA_PIN = 6;
 const int PIXELS_PER_ROW = 15;
-const int ROWS = 8;
+const int ROWS = 15;
 
 const int PIXELS = PIXELS_PER_ROW * ROWS;
 const int LEDS_PER_ROW = (((PIXELS_PER_ROW - 1) * 4) + 1);
