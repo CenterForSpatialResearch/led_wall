@@ -11,7 +11,7 @@ Adafruit_NeoPixel strip(LEDS_PER_ROW * ROWS, DATA_PIN, NEO_GRB + NEO_KHZ800);
 
 //
 
-const uint32_t white = strip.Color(255, 255, 255);
+const uint32_t white = strip.Color(245, 245, 245);
 
 const uint32_t red = strip.Color(255, 0, 0);
 const uint32_t blue = strip.Color(0, 0, 255);
@@ -27,60 +27,12 @@ const uint32_t mod_red = strip.Color(255, 50, 100);
 
 
 const uint32_t COLORS[] = {   
-
-//                              blue, cyan,
-//
-//                              red, mod_red,
-//                              red, purple,
-//                              red, yellow,                              
-//                              red, mod_blue,
-//                              yellow, white,                              
-//                              yellow, cyan,
-//                              blue, cyan,
-//                              green, cyan
-
-                                // all secondary
-//                                white, cyan,
-//                                white, purple,
-//                                cyan, yellow,
-//                                white, yellow,
-//                                cyan, purple,
-////                                yellow, purple
-
-//                                // all whites
-//                                white, blue,
-//                                white, green,
-//                                white, red,
-//                                white, yellow,
-//                               white, cyan,
-//                                                                    
-
-//                                // all yellows
-//                                yellow, blue,
-//                                yellow, green,
-//                                yellow, red,
-//                                white, yellow,
-//                               yellow, cyan,
-
-//                               // cyan
-//                               purple, cyan,
-//                                cyan, blue,
-//                                cyan, green,
-//                                cyan, red,
-//                                white, cyan,
-//                               yellow, cyan,
-
-
-
-                                // combos
-                                white, mod_blue,                                
-                                mod_blue, cyan, 
-                                cyan, red,
-                                red, yellow,
-                                yellow, white, 
-
                                                           
-                              
+white, cyan,
+cyan, mod_blue,
+blue, red,
+red, yellow, 
+yellow, white,         
                           };                         
 const uint32_t OFF_COLOR = strip.Color(0, 0, 0);
 uint32_t COLOR_LENGTH = sizeof(COLORS) / sizeof(COLORS[0]);
@@ -146,7 +98,7 @@ void loop() {
 //          rotation += 6;
 //        }
 //      }
-//      
+      
       uint8_t choice = random(0, 2);      
       uint32_t c = COLORS[(cycle + rotation + choice) % COLOR_LENGTH];
       setColor(pixel, c);
