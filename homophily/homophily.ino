@@ -1,5 +1,7 @@
 #include <Adafruit_NeoPixel.h>
 
+const uint8_t WALL = 0;
+
 const uint8_t DATA_PIN = 6;
 
 // settable params
@@ -23,13 +25,24 @@ const uint8_t NONE = 255; // max value for uint8_t, restricts this to the 15x15 
 Adafruit_NeoPixel strip(LEDS_PER_ROW * ROWS, DATA_PIN, NEO_GRB + NEO_KHZ800);
 
 // colors
-const uint32_t COLORS[] = {   strip.Color(255, 10, 75), strip.Color(50, 100, 255),     // red / blue
-                              strip.Color(255, 255, 0), strip.Color(255, 255, 255),   // yellow / white
-                              strip.Color(0, 0, 255), strip.Color(0, 255, 255),        // blue / aqua
-                              strip.Color(0, 255, 0), strip.Color(0, 255, 255)        // green / aqua
+const uint32_t white = strip.Color(245, 245, 245);
+const uint32_t red = strip.Color(255, 0, 0);
+const uint32_t blue = strip.Color(0, 0, 255);
+const uint32_t green = strip.Color(0, 255, 0);
+const uint32_t yellow = strip.Color(255, 255, 0);
+const uint32_t cyan = strip.Color(0, 255, 255);
+const uint32_t purple = strip.Color(255, 0, 255);
+const uint32_t mod_blue = strip.Color(50, 100, 255);
+const uint32_t mod_red = strip.Color(255, 50, 100);
+const uint32_t COLORS[] = {   white, cyan,
+                              cyan, mod_blue,
+                              blue, red,
+                              red, yellow,
+                              yellow, white,
                           };                         
+const uint8_t COLOR_LENGTH = sizeof(COLORS) / sizeof(COLORS[0]);
 const uint32_t OFF_COLOR = strip.Color(0, 0, 0);
-const uint8_t TOTAL_PAIRS = 4;
+
 
 // states
 const uint8_t STARTUP = 0;
@@ -61,7 +74,7 @@ void setup() {
     Serial.begin(19200);
     Serial.println("setup()");
     randomSeed(analogRead(A0));
-    color_offset = random(0, (TOTAL_PAIRS / 2) + 1) * 2;    
+    color_offset = WALL * 2;
     Serial.print("PIXELS_PER_ROW ");  
     Serial.println(PIXELS_PER_ROW);  
     Serial.print("ROWS ");  
@@ -195,7 +208,7 @@ void loop() {
                 state = INTRO;
                 Serial.println("INTRO");
                 color_offset += 2;
-                color_offset %= (TOTAL_PAIRS * 2);
+                color_offset %= COLOR_LENGTH;
                 break;
             }                    
             uint8_t pixel = sequence[index++];
