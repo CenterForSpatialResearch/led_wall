@@ -34,11 +34,12 @@ const uint32_t cyan = strip.Color(0, 255, 255);
 const uint32_t purple = strip.Color(255, 0, 255);
 const uint32_t mod_blue = strip.Color(50, 100, 255);
 const uint32_t mod_red = strip.Color(255, 50, 100);
-const uint32_t COLORS[] = {   white, cyan,
-                              cyan, mod_blue,
+const uint32_t COLORS[] = {   
                               blue, red,
-                              red, yellow,
+                              red, yellow,                              
                               yellow, white,
+                              white, cyan,
+                              cyan, mod_blue,
                           };                         
 const uint8_t COLOR_LENGTH = sizeof(COLORS) / sizeof(COLORS[0]);
 const uint32_t OFF_COLOR = strip.Color(0, 0, 0);
