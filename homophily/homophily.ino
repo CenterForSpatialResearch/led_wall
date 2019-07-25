@@ -35,7 +35,7 @@ const uint32_t purple = strip.Color(255, 0, 255);
 const uint32_t mod_blue = strip.Color(50, 100, 255);
 const uint32_t mod_red = strip.Color(255, 50, 100);
 const uint32_t COLORS[] = {   
-                              blue, red,
+                              mod_blue, red,
                               red, yellow,                              
                               yellow, white,
                               white, cyan,
