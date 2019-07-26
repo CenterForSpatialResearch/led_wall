@@ -20,12 +20,25 @@
         }
         #p5 {
             top: 100px;
-            width: 600px;
+            width: 400px;
+            height: 400px;
             margin: auto;
+        }
+        #label {
+            top: 50px;
+            width: 400px;
+            margin: auto;            
         }
     </style>
   </head>
   <body>
-    <div id="p5"></div>
+    <div id="label">
+        COLOR 1: R<input id="R1" size="3" value="255" /> G<input id="G1" size="3" value="0" /> B<input id="B1" size="3" value="0" /><br />
+        COLOR 2: R<input id="R2" size="3" value="0" /> G<input id="G2" size="3" value="0" /> B<input id="B2" size="3" value="255" /><br />
+        <br />
+        Click canvas to save image
+    </div>
+    <br />
+    <div id="p5"></div><br />    
   </body>
 </html>

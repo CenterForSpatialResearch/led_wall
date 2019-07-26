@@ -8,14 +8,14 @@ const ROWS = 15
 const TYPES = 2
 const MAX_STEPS = 2500
 const COUNTDOWN = 100
-const COLORS = [[255, 0, 0], [0, 0, 255], [100, 255, 0], [0, 255, 255], [0, 0, 255]]
+let COLORS = [[255, 0, 0], [0, 0, 255]]
 const OFF_COLOR = [255, 255, 255]
 const TRANSITION = 2
 
 // dependent constants
 const PIXELS = PIXELS_PER_ROW * ROWS
-const POPULATION = Math.floor(PIXELS / 2)
-// const POPULATION = 2
+// const POPULATION = Math.floor(PIXELS / 2)
+const POPULATION = 150
 
 // states
 const STARTUP = 0
@@ -34,6 +34,14 @@ let index
 let steps
 let countdown
 
+// interface elements
+let r1_field
+let g1_field
+let b1_field
+let r2_field
+let g2_field
+let b2_field
+
 // allocate arrays
 let pixel_colors = new Array(PIXELS)
 let previous_pixel_colors = new Array(PIXELS)
@@ -44,6 +52,20 @@ let transitions = new Array(PIXELS)
 function setup() {
     let canvas = createCanvas(400, 400)
     canvas.parent('p5') 
+
+    r1_field = select('#R1')
+    r1_field.changed(changeColors)
+    g1_field = select('#G1')
+    g1_field.changed(changeColors)
+    b1_field = select('#B1')
+    b1_field.changed(changeColors)
+    r2_field = select('#R2')
+    r2_field.changed(changeColors)
+    g2_field = select('#G2')
+    g2_field.changed(changeColors)
+    b2_field = select('#B2')
+    b2_field.changed(changeColors)
+
     CELL_SIZE = width / PIXELS_PER_ROW
     initNeighbors()
     stroke(0)
@@ -79,7 +101,7 @@ function draw() {
 
     if (state == STARTUP) {
         let pixel = index++;
-        setColor(pixel, COLORS[pixel % 2]);
+        setColor(pixel, COLORS[pixel % TYPES]);
         if (index == PIXELS) {
             reset()
             return
@@ -262,3 +284,22 @@ function paintColor(pixel, color) {
     circle((x * CELL_SIZE) + (CELL_SIZE / 2), (y * CELL_SIZE) + (CELL_SIZE / 2), CELL_SIZE - 4)
 }
 
+let capture = 0
+
+function mouseClicked() {
+    if (mouseX < 400 && mouseY < 400 && mouseX > 0 && mouseY > 0) {
+        save("capture_" + capture + ".png")
+        capture += 1
+    }
+}
+
+function changeColors() {
+    let r1 = parseInt(r1_field.value())
+    let g1 = parseInt(g1_field.value())
+    let b1 = parseInt(b1_field.value())
+    let r2 = parseInt(r2_field.value())
+    let g2 = parseInt(g2_field.value())
+    let b2 = parseInt(b2_field.value())    
+    COLORS = [[r1, g1, b1], [r2, g2, b2]]
+    reset()
+}
